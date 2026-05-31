@@ -1,0 +1,667 @@
+// File: src/app/calculators/break-even/BreakEvenCalculator.tsx
+"use client";
+
+import { useState, useMemo, useCallback, memo, useEffect } from "react";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { Button } from "@/components/ui/Button";
+import { ResultDisplay } from "@/components/ui/ResultDisplay";
+import { Container } from "@/components/ui/Container";
+import { Card } from "@/components/ui/Card";
+import { PAIR_OPTIONS, DIRECTION_OPTIONS } from "@/lib/constants/options";
+import { calculateBreakEven, BreakEvenResult, TradeDirection } from "@/lib/engine";
+import { useSmartCalculation } from "@/lib/hooks";
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface FormState {
+  entryPrice: string;
+  direction: TradeDirection;
+  currencyPair: string;
+  spreadPips: string;
+  commissionPerLot: string;
+  lotSize: string;
+  pipValue: string;
+}
+
+interface ValidationError {
+  id: string;
+  field: string;
+  message: string;
+  timestamp: number;
+}
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const generateId = () => Math.random().toString(36).substring(2, 9);
+
+const DEFAULT_STATE: FormState = {
+  entryPrice: "1.0850",
+  direction: "buy",
+  currencyPair: "EURUSD",
+  spreadPips: "1.5",
+  commissionPerLot: "7",
+  lotSize: "1",
+  pipValue: "10",
+};
+
+const ERROR_DISPLAY_DURATION = 3000;
+
+// ============================================================================
+// Error Toast Component
+// ============================================================================
+
+const ErrorToast = memo(function ErrorToast({
+  errors,
+  onDismiss,
+}: {
+  errors: ValidationError[];
+  onDismiss: (id: string) => void;
+}) {
+  if (errors.length === 0) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+      {errors.map((error) => (
+        <div
+          key={error.id}
+          className="bg-red-950/90 border border-red-800 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm flex items-start gap-3"
+          style={{ animation: "slideIn 0.3s ease-out forwards" }}
+        >
+          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center mt-0.5">
+            <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-red-200">{error.field}</p>
+            <p className="text-sm text-red-300/80 mt-0.5">{error.message}</p>
+          </div>
+          <button
+            onClick={() => onDismiss(error.id)}
+            className="flex-shrink-0 text-red-400 hover:text-red-300 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+});
+
+// ============================================================================
+// Success Toast Component
+// ============================================================================
+
+const SuccessToast = memo(function SuccessToast({
+  message,
+  onDismiss,
+}: {
+  message: string | null;
+  onDismiss: () => void;
+}) {
+  if (!message) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <div
+        className="bg-green-950/90 border border-green-800 rounded-lg px-4 py-3 shadow-lg backdrop-blur-sm flex items-center gap-3"
+        style={{ animation: "slideIn 0.3s ease-out forwards" }}
+      >
+        <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
+          <svg className="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+              clipRule="evenodd"
+            />
+          </svg>
+        </div>
+        <p className="text-sm text-green-200">{message}</p>
+        <button
+          onClick={onDismiss}
+          className="flex-shrink-0 text-green-400 hover:text-green-300 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+});
+
+// ============================================================================
+// Result Row Component
+// ============================================================================
+
+const ResultRow = memo(function ResultRow({
+  label,
+  value,
+  suffix,
+  highlight,
+  description,
+}: {
+  label: string;
+  value: string | number;
+  suffix?: string;
+  highlight?: boolean;
+  description?: string;
+}) {
+  const colorClass = highlight
+    ? "text-emerald-400 border-emerald-800/50 bg-emerald-950/20"
+    : "text-zinc-400 border-zinc-800 bg-zinc-900/50";
+
+  return (
+    <div
+      className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02] ${colorClass}`}
+    >
+      <div className="flex flex-col">
+        <span className="font-medium text-sm text-zinc-300">{label}</span>
+        {description && (
+          <span className="text-xs text-zinc-500 mt-0.5">{description}</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <span className={`font-mono font-bold ${highlight ? "text-emerald-400" : "text-zinc-200"}`}>
+          {value}
+        </span>
+        {suffix && <span className="text-xs text-zinc-500">{suffix}</span>}
+      </div>
+    </div>
+  );
+});
+
+// ============================================================================
+// Result Section Component
+// ============================================================================
+
+const ResultSection = memo(function ResultSection({
+  result,
+  form,
+  onCopy,
+}: {
+  result: BreakEvenResult | null;
+  form: FormState;
+  onCopy: () => void;
+}) {
+  if (!result) {
+    return (
+      <ResultDisplay title="Break-Even Analysis">
+        <div className="py-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-zinc-800/50 flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-zinc-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+          </div>
+          <p className="text-zinc-500 text-sm">
+            Enter valid values to calculate break-even price
+          </p>
+          <p className="text-zinc-600 text-xs mt-1">
+            Entry price is required
+          </p>
+        </div>
+      </ResultDisplay>
+    );
+  }
+
+  const isBuy = form.direction === "buy";
+
+  return (
+    <>
+      {/* Summary Card */}
+      <div className="bg-gradient-to-br from-emerald-950/30 to-teal-950/20 border border-emerald-800/30 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-lg font-semibold text-emerald-400">Break-Even Analysis</h3>
+          <Button variant="secondary" size="small" onClick={onCopy}>
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              Copy
+            </span>
+          </Button>
+        </div>
+        
+        {/* Highlight Box */}
+        <div className="bg-emerald-900/30 border border-emerald-700/50 rounded-lg p-4 mb-3">
+          <div className="text-center">
+            <span className="text-zinc-400 text-sm">Break-Even Price</span>
+            <p className="text-3xl font-mono font-bold text-emerald-400 mt-1">
+              {result.breakEvenPrice}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+          <div className="bg-zinc-900/50 rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Entry Price</span>
+            <p className="font-mono font-semibold text-zinc-200">{form.entryPrice}</p>
+          </div>
+          <div className="bg-zinc-900/50 rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Direction</span>
+            <p className={`font-semibold ${isBuy ? "text-green-400" : "text-red-400"}`}>
+              {isBuy ? "Buy (Long)" : "Sell (Short)"}
+            </p>
+          </div>
+          <div className="bg-zinc-900/50 rounded-lg p-2.5">
+            <span className="text-zinc-500 text-xs">Cost (Pips)</span>
+            <p className="font-mono font-semibold text-amber-400">{result.breakEvenPips}</p>
+          </div>
+          {result.breakEvenCost && (
+            <div className="bg-zinc-900/50 rounded-lg p-2.5">
+              <span className="text-zinc-500 text-xs">Cost (USD)</span>
+              <p className="font-mono font-semibold text-amber-400">${result.breakEvenCost}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Direction Info */}
+      <div className={`border rounded-lg p-3 ${isBuy ? "bg-green-950/20 border-green-800/30" : "bg-red-950/20 border-red-800/30"}`}>
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isBuy ? "bg-green-400" : "bg-red-400"} animate-pulse`} />
+          <span className={`text-sm font-medium ${isBuy ? "text-green-400" : "text-red-400"}`}>
+            Price Must Move {isBuy ? "Up" : "Down"}
+          </span>
+        </div>
+        <p className="text-xs text-zinc-400 mt-1">
+          Your trade needs to move <strong className="text-zinc-300">{result.breakEvenPips} pips</strong> {isBuy ? "higher" : "lower"} to break even after costs.
+        </p>
+      </div>
+
+      {/* Detailed Breakdown */}
+      <ResultDisplay title="Cost Breakdown">
+        <div className="space-y-2">
+          <ResultRow
+            label="Entry Price"
+            value={form.entryPrice}
+            description="Your trade entry point"
+          />
+          <ResultRow
+            label="Break-Even Price"
+            value={result.breakEvenPrice}
+            highlight
+            description="Price needed to cover all costs"
+          />
+          <ResultRow
+            label="Spread Cost"
+            value={form.spreadPips || "0"}
+            suffix="pips"
+            description="Broker spread"
+          />
+          <ResultRow
+            label="Commission"
+            value={form.commissionPerLot || "0"}
+            suffix="USD/lot"
+            description="Round-trip commission"
+          />
+          <ResultRow
+            label="Lot Size"
+            value={form.lotSize || "1"}
+            suffix="lots"
+            description="Position size"
+          />
+        </div>
+      </ResultDisplay>
+
+      {/* Quick Reference */}
+      <ResultDisplay title="Understanding Break-Even">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          <div className="space-y-2">
+            <h4 className="text-zinc-400 font-medium">Why It Matters</h4>
+            <ul className="space-y-1 text-zinc-500">
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                <span>Know your minimum profitable exit</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                <span>Set realistic take-profit targets</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                <span>Compare broker costs effectively</span>
+              </li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <h4 className="text-zinc-400 font-medium">Cost Components</h4>
+            <ul className="space-y-1 text-zinc-500">
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                <span><strong className="text-zinc-300">Spread</strong> - Bid/ask difference</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                <span><strong className="text-zinc-300">Commission</strong> - Broker fee per lot</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
+                <span><strong className="text-zinc-300">Swap</strong> - Overnight holding (not included)</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </ResultDisplay>
+    </>
+  );
+});
+
+// ============================================================================
+// Form Section Components
+// ============================================================================
+
+const FormSection = memo(function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium text-zinc-400 uppercase tracking-wider">{title}</h3>
+      {children}
+    </div>
+  );
+});
+
+const FormRow = memo(function FormRow({ children }: { children: React.ReactNode }) {
+  return <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>;
+});
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+export function BreakEvenCalculator() {
+  const [form, setForm] = useState<FormState>(DEFAULT_STATE);
+  const [errors, setErrors] = useState<ValidationError[]>([]);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Auto-dismiss errors after 3 seconds
+  useEffect(() => {
+    if (errors.length === 0) return;
+
+    const timers = errors.map((error) => {
+      const elapsed = Date.now() - error.timestamp;
+      const remaining = Math.max(0, ERROR_DISPLAY_DURATION - elapsed);
+
+      return setTimeout(() => {
+        setErrors((prev) => prev.filter((e) => e.id !== error.id));
+      }, remaining);
+    });
+
+    return () => timers.forEach(clearTimeout);
+  }, [errors]);
+
+  // Auto-dismiss success message
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [successMessage]);
+
+  // Debounce form values for performance
+  const { calculationInput: debouncedForm, triggerCalculate, hasPendingChanges } = useSmartCalculation(form, 150);
+
+  // Calculate results
+  const result = useMemo<BreakEvenResult | null>(() => {
+    if (!debouncedForm) return null;
+    const entry = parseFloat(debouncedForm.entryPrice);
+
+    if (isNaN(entry) || entry <= 0) return null;
+
+    const spread = parseFloat(debouncedForm.spreadPips);
+    if (debouncedForm.spreadPips && (isNaN(spread) || spread < 0)) return null;
+
+    const commission = parseFloat(debouncedForm.commissionPerLot);
+    if (debouncedForm.commissionPerLot && (isNaN(commission) || commission < 0)) return null;
+
+    return calculateBreakEven({
+      entryPrice: debouncedForm.entryPrice,
+      direction: debouncedForm.direction,
+      currencyPair: debouncedForm.currencyPair,
+      spreadPips: debouncedForm.spreadPips || undefined,
+      commissionPerLot: debouncedForm.commissionPerLot || undefined,
+      lotSize: debouncedForm.lotSize || undefined,
+      pipValue: debouncedForm.pipValue || undefined,
+    });
+  }, [debouncedForm]);
+
+  // Dismiss error
+  const dismissError = useCallback((id: string) => {
+    setErrors((prev) => prev.filter((e) => e.id !== id));
+  }, []);
+
+  // Form field handlers
+  const handleFieldChange = useCallback(
+    (field: keyof FormState) =>
+      (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setForm((prev) => ({ ...prev, [field]: e.target.value }));
+      },
+    []
+  );
+
+  // Copy result to clipboard
+  const handleCopy = useCallback(() => {
+    if (!result) return;
+
+    const text = `Break-Even Analysis
+Entry Price: ${form.entryPrice}
+Break-Even Price: ${result.breakEvenPrice}
+Cost in Pips: ${result.breakEvenPips}
+Direction: ${form.direction === "buy" ? "Buy (Long)" : "Sell (Short)"}
+${result.breakEvenCost ? `Cost in USD: $${result.breakEvenCost}` : ""}`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      setSuccessMessage("Break-even data copied to clipboard!");
+    }).catch(() => {
+      setErrors((prev) => [...prev, {
+        id: generateId(),
+        field: "Copy Failed",
+        message: "Could not copy to clipboard",
+        timestamp: Date.now(),
+      }]);
+    });
+  }, [result, form]);
+
+  // Reset form
+  const handleReset = useCallback(() => {
+    setForm(DEFAULT_STATE);
+  }, []);
+
+  return (
+    <>
+      <style jsx global>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(100%);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+
+      <section className="py-8 md:py-12">
+        <Container>
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold text-zinc-100">Break-Even Calculator</h1>
+            <p className="mt-2 text-zinc-400">
+              Calculate the price level where your trade breaks even after spread and commission costs.
+            </p>
+          </div>
+
+          {/* Main Layout - Sticky Form, Scrollable Results */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+            {/* Form Section - Sticky on Desktop */}
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <Card className="p-6 space-y-6">
+                <FormSection title="Trade Setup">
+                  <FormRow>
+                    <Select
+                      label="Currency Pair"
+                      options={PAIR_OPTIONS}
+                      value={form.currencyPair}
+                      onChange={handleFieldChange("currencyPair")}
+                    />
+                    <Select
+                      label="Direction"
+                      options={DIRECTION_OPTIONS}
+                      value={form.direction}
+                      onChange={handleFieldChange("direction")}
+                    />
+                  </FormRow>
+                  <Input
+                    label="Entry Price"
+                    type="number"
+                    value={form.entryPrice}
+                    onChange={handleFieldChange("entryPrice")}
+                    placeholder="1.0850"
+                    min="0"
+                    step="0.00001"
+                  />
+                </FormSection>
+
+                <FormSection title="Trading Costs">
+                  <FormRow>
+                    <Input
+                      label="Spread"
+                      type="number"
+                      value={form.spreadPips}
+                      onChange={handleFieldChange("spreadPips")}
+                      placeholder="1.5"
+                      min="0"
+                      step="0.1"
+                      suffix="pips"
+                      helper="Broker spread for this pair"
+                    />
+                    <Input
+                      label="Commission per Lot"
+                      type="number"
+                      value={form.commissionPerLot}
+                      onChange={handleFieldChange("commissionPerLot")}
+                      placeholder="7"
+                      min="0"
+                      step="0.5"
+                      suffix="USD"
+                      helper="Round-trip commission"
+                    />
+                  </FormRow>
+                </FormSection>
+
+                <FormSection title="Position Details">
+                  <FormRow>
+                    <Input
+                      label="Lot Size"
+                      type="number"
+                      value={form.lotSize}
+                      onChange={handleFieldChange("lotSize")}
+                      placeholder="1"
+                      min="0.01"
+                      step="0.01"
+                      suffix="lots"
+                      helper="For commission calculation"
+                    />
+                    <Input
+                      label="Pip Value"
+                      type="number"
+                      value={form.pipValue}
+                      onChange={handleFieldChange("pipValue")}
+                      placeholder="10"
+                      min="0"
+                      step="0.01"
+                      suffix="USD/pip"
+                      helper="Per standard lot"
+                    />
+                  </FormRow>
+                </FormSection>
+
+                <div className="flex gap-3 pt-2">
+                  {triggerCalculate && (
+                    <Button
+                      variant="primary"
+                      size="small"
+                      onClick={triggerCalculate}
+                      className={hasPendingChanges ? "ring-2 ring-accent-400/50" : ""}
+                    >
+                      Calculate
+                    </Button>
+                  )}
+                  <Button variant="secondary" size="small" onClick={handleReset}>
+                    Reset
+                  </Button>
+                </div>
+
+                {/* Pro Tips */}
+                <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
+                  <h4 className="text-sm font-medium text-zinc-300 mb-2 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Pro Tips
+                  </h4>
+                  <ul className="text-xs text-zinc-500 space-y-1">
+                    <li>- <strong className="text-zinc-400">Always include costs</strong> in your trading plan</li>
+                    <li>- Lower <strong className="text-zinc-400">spreads and commissions</strong> = faster break-even</li>
+                    <li>- <strong className="text-zinc-400">ECN brokers</strong> often have lower total costs</li>
+                    <li>- Consider <strong className="text-zinc-400">overnight swap</strong> for longer holds</li>
+                  </ul>
+                </div>
+              </Card>
+            </div>
+
+            {/* Results Section - Scrollable */}
+            <div className="space-y-4 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2">
+              <ResultSection result={result} form={form} onCopy={handleCopy} />
+            </div>
+          </div>
+        </Container>
+      </section>
+
+      {/* Error Toasts */}
+      <ErrorToast errors={errors} onDismiss={dismissError} />
+      
+      {/* Success Toast */}
+      <SuccessToast message={successMessage} onDismiss={() => setSuccessMessage(null)} />
+    </>
+  );
+}

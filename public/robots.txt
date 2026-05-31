@@ -1,0 +1,12 @@
+// File: public/robots.txt
+# Robots.txt for QuantPips
+# https://quantpips.com
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://quantpips.com/sitemap.xml
+
+# Disallow admin/internal paths (if any in future)
+Disallow: /api/
