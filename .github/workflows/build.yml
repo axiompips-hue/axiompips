@@ -57,3 +57,4 @@ jobs:
           files: dist-electron/AxiomPips-Setup-0.1.0.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+publish: null
