@@ -1,27 +1,18 @@
-# electron/builder.yml
-# AxiomPips Desktop — electron-builder configuration
-# Run:  npm run electron:build
-# Docs: https://www.electron.build/configuration/configuration
-
-appId: com.axiompips.desktop
+﻿appId: com.axiompips.desktop
 productName: AxiomPips
 copyright: "Copyright © 2025 AxiomPips"
 
-# Directory where electron-builder looks for app files
 directories:
-  buildResources: electron/assets   # icon.ico lives here
+  buildResources: electron/assets
   output: dist-electron
 
-# Files to include in the package
 files:
   - electron/**
   - "!electron/assets/README.md"
 
-# ── Windows ──────────────────────────────────────────────────────────────────
 win:
   target:
-    - target: nsis      # installer (.exe)
-    - target: portable  # standalone .exe — no install needed
+    - target: nsis
   artifactName: "AxiomPips-Setup-${version}.${ext}"
   requestedExecutionLevel: asInvoker
   signingHashAlgorithms: null
@@ -35,29 +26,4 @@ nsis:
   shortcutName: AxiomPips
   displayLanguageSelector: false
 
-# ── macOS ─────────────────────────────────────────────────────────────────────
-mac:
-  target:
-    - dmg
-  category: public.app-category.finance
-  artifactName: "AxiomPips-${version}.${ext}"
-  identity: null
-  sign: null
-
-dmg:
-  title: "AxiomPips ${version}"
-
-# ── Linux ─────────────────────────────────────────────────────────────────────
-linux:
-  target:
-    - AppImage
-    - deb
-  category: Office
-  artifactName: "AxiomPips-${version}.${ext}"
-
-# ── Auto-updater (GitHub Releases) ───────────────────────────────────────────
-# Uncomment and fill in when you push releases to GitHub:
-# publish:
-#   provider: github
-#   owner: your-github-username
-#   repo: axiompips-desktop
+publish: null
