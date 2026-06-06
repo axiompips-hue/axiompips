@@ -1,4 +1,4 @@
-# electron/builder.yml
+﻿# electron/builder.yml
 # AxiomPips Desktop — electron-builder configuration
 
 appId: com.axiompips.desktop
@@ -41,9 +41,7 @@ nsis:
 
   # Installer pages — clean and minimal
   installerLanguages:
-    - English
-
-  displayLanguageSelector: false
+    - en_US  displayLanguageSelector: false
 
   # License (optional — comment out if you don't have one)
   # license: electron/assets/LICENSE.txt
