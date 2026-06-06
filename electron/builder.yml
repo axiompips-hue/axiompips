@@ -1,4 +1,7 @@
-﻿appId: com.axiompips.desktop
+# electron/builder.yml
+# AxiomPips Desktop — electron-builder configuration
+
+appId: com.axiompips.desktop
 productName: AxiomPips
 copyright: "Copyright © 2025 AxiomPips"
 
@@ -10,6 +13,7 @@ files:
   - electron/**
   - "!electron/assets/README.md"
 
+# ── Windows ───────────────────────────────────────────────────────────────────
 win:
   target:
     - target: nsis
@@ -18,12 +22,41 @@ win:
   signingHashAlgorithms: null
   sign: null
 
+# ── NSIS Installer (beautiful dark theme) ─────────────────────────────────────
 nsis:
+  # Installer behavior
   oneClick: false
   allowToChangeInstallationDirectory: true
+  allowElevation: true
+  perMachine: false
+
+  # Shortcuts
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: AxiomPips
+  menuCategory: "AxiomPips"
+
+  # Custom script for dark theme + reinstall detection
+  include: electron/installer.nsh
+
+  # Installer pages — clean and minimal
+  installerLanguages:
+    - English
+
   displayLanguageSelector: false
 
+  # License (optional — comment out if you don't have one)
+  # license: electron/assets/LICENSE.txt
+
+  # Custom installer/uninstaller names
+  uninstallDisplayName: "AxiomPips ${version}"
+
+  # Beautiful dark theme installer images
+  installerHeader: electron/assets/installerHeader.bmp
+  installerSidebar: electron/assets/installerSidebar.bmp
+
+  # Delete app data on uninstall prompt
+  deleteAppDataOnUninstall: false
+
+# ── Publishing — handled by GitHub Actions, not electron-builder ──────────────
 publish: null
