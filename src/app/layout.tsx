@@ -1,5 +1,5 @@
-// File: src/app/layout.tsx
-// CHANGE: Added <DesktopBanner /> — everything else is identical to the original.
+// src/app/layout.tsx
+// CHANGE: Added <DesktopTitleBar /> — everything else identical to original.
 
 import type { Metadata } from "next";
 import "./globals.css";
@@ -10,7 +10,7 @@ import { WebsiteStructuredData } from "@/components/seo";
 import { ToastProvider } from "@/components/ui/Toast";
 import { FeedbackButton } from "@/components/feedback";
 import { GuideTour } from "@/components/guide";
-import { DesktopBanner } from "@/components/desktop";
+import { DesktopBanner, DesktopTitleBar } from "@/components/desktop";
 
 export const metadata: Metadata = {
   title: {
@@ -35,9 +35,7 @@ export const metadata: Metadata = {
   creator: "AxiomPips",
   publisher: "AxiomPips",
   metadataBase: new URL("https://axiompips.com"),
-  alternates: {
-    canonical: "/",
-  },
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -46,14 +44,7 @@ export const metadata: Metadata = {
     title: "AxiomPips - Precision Forex Calculators",
     description:
       "High-performance forex calculators and trading tools crafted for precision and speed.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "AxiomPips - Precision Forex Calculators",
-      },
-    ],
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "AxiomPips - Precision Forex Calculators" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -77,18 +68,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
@@ -101,6 +86,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-neutral-950 text-zinc-100 flex flex-col">
         <ToastProvider>
+          {/* Animated top accent bar — only visible in desktop app */}
+          <DesktopTitleBar />
+
           <SkipLink />
           <Header />
           <main id="main-content" className="flex-1" tabIndex={-1}>
@@ -109,9 +97,10 @@ export default function RootLayout({
           <Footer />
           <FeedbackButton />
           <GuideTour />
-          {/* ── Desktop app download prompt (only shown in browser, not Electron) ── */}
+
+          {/* Download prompt — only shown in browser, never in Electron */}
           <DesktopBanner
-            downloadUrl="https://github.com/your-username/axiompips/releases/latest"
+            downloadUrl="https://github.com/axiompips-hue/axiompips/releases/download/v0.1.0/AxiomPips-Setup-0.1.0.exe"
             delay={3000}
           />
         </ToastProvider>

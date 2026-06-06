@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AxiomPips</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 440px;
+    height: 280px;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+
+  .shell {
+    width: 100%;
+    height: 100%;
+    background: #0d0e11;
+    border: 1px solid #27272a;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+
+  /* Ambient glow background */
+  .glow-top {
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 200px;
+    background: radial-gradient(ellipse, rgba(6,182,212,0.18) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .glow-bottom {
+    position: absolute;
+    bottom: -40px;
+    right: 20px;
+    width: 200px;
+    height: 150px;
+    background: radial-gradient(ellipse, rgba(139,92,246,0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Grid pattern */
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+  }
+
+  /* Logo mark */
+  .logo-wrap {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    animation: fadeUp 0.6s ease-out both;
+  }
+
+  .logo-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0e7490, #06b6d4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px rgba(6,182,212,0.35), 0 4px 20px rgba(0,0,0,0.5);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  .logo-icon svg {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .logo-name {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #22d3ee, #a5f3fc, #22d3ee);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 2.5s linear infinite;
+  }
+
+  .logo-tagline {
+    font-size: 11px;
+    color: #71717a;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: -8px;
+    animation: fadeUp 0.6s ease-out 0.2s both;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    position: relative;
+    z-index: 10;
+    width: 220px;
+    margin-top: 28px;
+    animation: fadeUp 0.6s ease-out 0.4s both;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 3px;
+    background: #27272a;
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #06b6d4, #22d3ee);
+    box-shadow: 0 0 8px rgba(6,182,212,0.6);
+    animation: load 2.0s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards;
+  }
+
+  .progress-label {
+    margin-top: 10px;
+    font-size: 11px;
+    color: #52525b;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+
+  /* Version badge */
+  .version {
+    position: absolute;
+    bottom: 14px;
+    right: 18px;
+    font-size: 10px;
+    color: #3f3f46;
+    z-index: 10;
+  }
+
+  /* Corner accent */
+  .corner-tl {
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    border-top: 1px solid rgba(6,182,212,0.25);
+    border-left: 1px solid rgba(6,182,212,0.25);
+    border-radius: 16px 0 0 0;
+    pointer-events: none;
+  }
+  .corner-br {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 60px; height: 60px;
+    border-bottom: 1px solid rgba(139,92,246,0.2);
+    border-right: 1px solid rgba(139,92,246,0.2);
+    border-radius: 0 0 16px 0;
+    pointer-events: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes load {
+    0%   { width: 0%; }
+    30%  { width: 35%; }
+    60%  { width: 65%; }
+    85%  { width: 88%; }
+    100% { width: 100%; }
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: 0% center; }
+    100% { background-position: 200% center; }
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 30px rgba(6,182,212,0.35), 0 4px 20px rgba(0,0,0,0.5); }
+    50%       { box-shadow: 0 0 45px rgba(6,182,212,0.55), 0 4px 20px rgba(0,0,0,0.5); }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="grid-bg"></div>
+  <div class="glow-top"></div>
+  <div class="glow-bottom"></div>
+  <div class="corner-tl"></div>
+  <div class="corner-br"></div>
+
+  <div class="logo-wrap">
+    <div class="logo-icon">
+      <!-- Candlestick / chart icon -->
+      <svg viewBox="0 0 24 24">
+        <line x1="12" y1="2"  x2="12" y2="6"  />
+        <rect x="9"  y="6"  width="6" height="8" rx="1" />
+        <line x1="12" y1="14" x2="12" y2="18" />
+        <line x1="5"  y1="5"  x2="5"  y2="8"  />
+        <rect x="2"  y="8"  width="6" height="6" rx="1" />
+        <line x1="5"  y1="14" x2="5"  y2="17" />
+        <line x1="19" y1="7"  x2="19" y2="10" />
+        <rect x="16" y="10" width="6" height="5" rx="1" />
+        <line x1="19" y1="15" x2="19" y2="18" />
+      </svg>
+    </div>
+    <div class="logo-name">AxiomPips</div>
+    <div class="logo-tagline">Precision Tools for Smarter Trading</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-track">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="progress-label">Loading your workspace…</div>
+  </div>
+
+  <div class="version">v0.1.0</div>
+</div>
+</body>
+</html>
