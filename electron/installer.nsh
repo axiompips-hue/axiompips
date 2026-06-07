@@ -1,29 +1,16 @@
 ; electron/installer.nsh
-; AxiomPips — Custom installer logic only (no MUI redefinitions)
+; AxiomPips — Custom installer logic
 
 !macro customInstall
-  ; Check if already installed
   ReadRegStr $0 HKCU "Software\AxiomPips" "InstallPath"
-  ${If} $0 != ""
-  ${AndIf} ${FileExists} "$0\AxiomPips.exe"
-    MessageBox MB_YESNOCANCEL|MB_ICONQUESTION \
-      "AxiomPips is already installed.$\r$\n$\r$\nYES    = Update to latest version$\r$\nNO     = Uninstall AxiomPips$\r$\nCANCEL = Abort" \
-      IDYES done \
-      IDNO  do_uninstall \
-      IDCANCEL do_cancel
-
+  StrCmp $0 "" skip_check 0
+  IfFileExists "$0\AxiomPips.exe" 0 skip_check
+    MessageBox MB_YESNO|MB_ICONQUESTION "AxiomPips is already installed.$\r$\n$\r$\nClick YES to update.$\r$\nClick NO to uninstall." IDYES skip_check IDNO do_uninstall
     do_uninstall:
       ExecWait '"$0\Uninstall AxiomPips.exe" /S'
       MessageBox MB_OK|MB_ICONINFORMATION "AxiomPips has been uninstalled."
       Quit
-
-    do_cancel:
-      Quit
-
-    done:
-      ExecWait 'taskkill /F /IM AxiomPips.exe'
-      Sleep 800
-  ${EndIf}
+  skip_check:
 !macroend
 
 !macro customUnInstall
