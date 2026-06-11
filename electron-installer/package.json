@@ -1,11 +1,11 @@
 {
   "name": "axiompips-installer",
   "version": "0.1.0",
-  "description": "AxiomPips Desktop Installer",
-  "main": "electron-installer/main.js",
+  "description": "AxiomPips Beautiful Custom Installer",
+  "main": "main.js",
   "private": true,
   "scripts": {
-    "build:installer": "electron-builder --config electron-installer/installer-builder.yml --win"
+    "build:installer": "electron-builder --config installer-builder.yml --win"
   },
   "devDependencies": {
     "electron": "^33.4.0",

@@ -4,39 +4,33 @@
 import { useCallback, useRef, useEffect } from "react";
 
 /**
- * Hook that returns a debounced version of a callback.
+ * Returns a stable debounced wrapper around `callback`.
+ * - The returned function reference never changes (safe as event handler / dep).
+ * - `callback` and `delay` changes are picked up without recreating the wrapper.
  */
 export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
-): T {
+): (...args: Parameters<T>) => void {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbackRef = useRef(callback);
+  const delayRef = useRef(delay);
 
-  // Update callback ref when callback changes
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
+  // Keep refs current without triggering a new debounced function
+  useEffect(() => { callbackRef.current = callback; }, [callback]);
+  useEffect(() => { delayRef.current = delay; }, [delay]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+  // Clean up on unmount
+  useEffect(() => () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
   }, []);
 
-  return useCallback(
-    ((...args: Parameters<T>) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(() => {
-        callbackRef.current(...args);
-      }, delay);
-    }) as T,
-    [delay]
-  );
+  // Stable identity — deps array is empty on purpose
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  return useCallback((...args: Parameters<T>) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      callbackRef.current(...args);
+    }, delayRef.current);
+  }, []);
 }

@@ -28,14 +28,21 @@ jobs:
           echo RESEND_API_KEY=${{ secrets.RESEND_API_KEY }} >> .env.local
         shell: bash
 
-      - name: Build Next.js + Electron installer
-        run: npm run electron:build:win
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Build beautiful custom installer
+        run: |
+          cd electron-installer
+          npm install
+          npm run build:installer
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
-          EP_DRAFT: false
-          EP_PRE_RELEASE: false
 
-      - name: Upload to GitHub Release
+      - name: Upload installer to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "AxiomPips ${{ github.ref_name }}"
@@ -43,18 +50,17 @@ jobs:
             ## AxiomPips Desktop ${{ github.ref_name }}
 
             ### Download
-            - **Windows Installer**: Download `AxiomPips-Setup-0.1.0.exe` below
+            - **Windows**: Download `AxiomPips-Setup.exe` below
 
             ### Installation
-            1. Download `AxiomPips-Setup-0.1.0.exe`
-            2. Run it
-            3. Click More info -> Run anyway
-            4. Follow the installer
-            5. Launch AxiomPips from your desktop
+            1. Download `AxiomPips-Setup.exe`
+            2. Run it — beautiful installer opens
+            3. Click Install AxiomPips
+            4. Launch from your desktop
 
             ### Requirements
             - Windows 10 or later
             - Internet connection
-          files: dist-electron/AxiomPips-Setup-0.1.0.exe
+          files: electron-installer/dist-installer/AxiomPips-Setup.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

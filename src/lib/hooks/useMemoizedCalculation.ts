@@ -1,10 +1,16 @@
 // File: src/lib/hooks/useMemoizedCalculation.ts
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
+import { shallowEqual } from "@/lib/utils/performance";
 
 /**
- * Hook for memoizing expensive calculations with deep comparison.
+ * Memoizes an expensive calculation.
+ *
+ * CHANGE: replaced JSON.stringify comparison with shallowEqual — O(k) instead
+ * of O(n) and no string allocations on every render.
+ *
+ * Pass a custom `compare` for deep/complex dependency shapes.
  */
 export function useMemoizedCalculation<T, D>(
   calculate: () => T,
@@ -14,20 +20,18 @@ export function useMemoizedCalculation<T, D>(
   const previousDeps = useRef<D | undefined>(undefined);
   const previousResult = useRef<T | undefined>(undefined);
 
-  return useMemo(() => {
-    // Default comparison using JSON.stringify
-    const isEqual = compare
-      ? compare(previousDeps.current as D, dependencies)
-      : JSON.stringify(previousDeps.current) === JSON.stringify(dependencies);
+  const isEqual =
+    previousDeps.current !== undefined &&
+    (compare
+      ? compare(previousDeps.current, dependencies)
+      : shallowEqual(previousDeps.current, dependencies));
 
-    if (previousResult.current !== undefined && isEqual) {
-      return previousResult.current;
-    }
+  if (isEqual && previousResult.current !== undefined) {
+    return previousResult.current;
+  }
 
-    const result = calculate();
-    previousDeps.current = dependencies;
-    previousResult.current = result;
-
-    return result;
-  }, [dependencies, calculate, compare]);
+  const result = calculate();
+  previousDeps.current = dependencies;
+  previousResult.current = result;
+  return result;
 }

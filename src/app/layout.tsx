@@ -1,7 +1,9 @@
 // src/app/layout.tsx
-// CHANGE: Added <DesktopTitleBar /> — everything else identical to original.
+// CHANGE: Replaced runtime <link> Google Fonts with next/font (self-hosted, zero extra round-trip).
+// Everything else is identical to the original.
 
 import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -12,6 +14,27 @@ import { FeedbackButton } from "@/components/feedback";
 import { GuideTour } from "@/components/guide";
 import { DesktopBanner, DesktopTitleBar } from "@/components/desktop";
 
+// ─── Fonts ────────────────────────────────────────────────────────────────────
+// next/font downloads and self-hosts these at build time.
+// No runtime DNS lookup, no render-blocking <link>, no CORS issue.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: true,
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-jetbrains",
+  display: "swap",
+  // Only preload if monospace is above-the-fold — set false to avoid wasted bytes
+  preload: false,
+});
+
+// ─── Metadata ────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
   title: {
     default: "AxiomPips - Precision Forex Calculators",
@@ -66,29 +89,22 @@ export const metadata: Metadata = {
   },
 };
 
+// ─── Root Layout ─────────────────────────────────────────────────────────────
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-          rel="stylesheet"
-        />
         <WebsiteStructuredData
           name="AxiomPips"
           description="High-performance forex calculators and trading tools crafted for precision and speed."
           url="https://axiompips.com"
         />
       </head>
-      <body className="min-h-screen bg-neutral-950 text-zinc-100 flex flex-col">
+      <body className="min-h-screen bg-neutral-950 text-zinc-100 flex flex-col font-sans">
         <ToastProvider>
-          {/* Animated top accent bar — only visible in desktop app */}
           <DesktopTitleBar />
-
           <SkipLink />
           <Header />
           <main id="main-content" className="flex-1" tabIndex={-1}>
@@ -97,8 +113,6 @@ export default function RootLayout({
           <Footer />
           <FeedbackButton />
           <GuideTour />
-
-          {/* Download prompt — only shown in browser, never in Electron */}
           <DesktopBanner
             downloadUrl="https://github.com/axiompips-hue/axiompips/releases/download/v0.1.0/AxiomPips-Setup-0.1.0.exe"
             delay={3000}

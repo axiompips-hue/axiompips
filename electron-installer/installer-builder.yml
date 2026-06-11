@@ -1,0 +1,23 @@
+# electron-installer/installer-builder.yml
+# Builds the beautiful custom installer as a standalone .exe
+
+appId: com.axiompips.installer
+productName: AxiomPips Installer
+copyright: "Copyright © 2025 AxiomPips"
+
+directories:
+  output: dist-installer
+
+files:
+  - electron-installer/**
+  - "!node_modules"
+
+win:
+  target:
+    - target: portable
+  artifactName: "AxiomPips-Setup.exe"
+  requestedExecutionLevel: asInvoker
+  signingHashAlgorithms: null
+  sign: null
+
+publish: null

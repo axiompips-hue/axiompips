@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AxiomPips Installer</title>
+<style>
+/* ── Reset ────────────────────────────────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html,body{width:540px;height:680px;overflow:hidden;background:transparent;
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;user-select:none;-webkit-app-region:no-drag}
+
+/* ── Shell ────────────────────────────────────────────────────────────────── */
+.shell{
+  width:540px;height:680px;position:relative;overflow:hidden;
+  background:#09090b;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:20px;
+  box-shadow:0 40px 120px rgba(0,0,0,0.9),0 0 0 1px rgba(6,182,212,0.08);
+}
+
+/* ── Drag region ──────────────────────────────────────────────────────────── */
+.drag-bar{
+  position:absolute;top:0;left:0;right:0;height:48px;
+  -webkit-app-region:drag;z-index:100;
+}
+
+/* ── Window controls ──────────────────────────────────────────────────────── */
+.win-controls{
+  position:absolute;top:14px;right:16px;z-index:101;
+  display:flex;gap:8px;-webkit-app-region:no-drag;
+}
+.win-btn{
+  width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;
+  transition:all 0.2s;display:flex;align-items:center;justify-content:center;
+  font-size:8px;color:transparent;
+}
+.win-btn:hover{color:rgba(0,0,0,0.7)}
+.win-btn.close{background:#ff5f57}
+.win-btn.close:hover{background:#ff3b30}
+.win-btn.minimize{background:#febc2e}
+.win-btn.minimize:hover{background:#f0a500}
+
+/* ── Canvas (particles) ───────────────────────────────────────────────────── */
+#canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* ── Ambient glows ────────────────────────────────────────────────────────── */
+.glow-cyan{
+  position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:400px;height:300px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(6,182,212,0.15) 0%,transparent 70%);
+  pointer-events:none;animation:glowPulse 4s ease-in-out infinite;
+}
+.glow-purple{
+  position:absolute;bottom:-80px;right:-60px;
+  width:300px;height:200px;
+  background:radial-gradient(ellipse,rgba(139,92,246,0.10) 0%,transparent 70%);
+  pointer-events:none;animation:glowPulse 5s ease-in-out infinite reverse;
+}
+@keyframes glowPulse{
+  0%,100%{opacity:0.6;transform:translateX(-50%) scale(1)}
+  50%{opacity:1;transform:translateX(-50%) scale(1.1)}
+}
+
+/* ── Grid ─────────────────────────────────────────────────────────────────── */
+.grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);
+  background-size:40px 40px;
+  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+  pointer-events:none;
+}
+
+/* ── Top accent bar ───────────────────────────────────────────────────────── */
+.accent-bar{
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,#06b6d4,#818cf8,#06b6d4,transparent);
+  background-size:200% 100%;
+  animation:barShift 3s linear infinite;
+  border-radius:20px 20px 0 0;
+}
+@keyframes barShift{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
+
+/* ── Content ──────────────────────────────────────────────────────────────── */
+.content{
+  position:relative;z-index:10;
+  height:100%;display:flex;flex-direction:column;
+  align-items:center;padding:60px 48px 40px;
+}
+
+/* ── Logo ─────────────────────────────────────────────────────────────────── */
+.logo-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
+}
+.logo-icon{
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(135deg,#0e7490 0%,#06b6d4 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 1px rgba(6,182,212,0.3),0 0 40px rgba(6,182,212,0.4),0 8px 32px rgba(0,0,0,0.5);
+  animation:iconPulse 3s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.logo-icon::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%);
+}
+.logo-icon svg{width:38px;height:38px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@keyframes iconPulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(6,182,212,0.3),0 0 40px rgba(6,182,212,0.4),0 8px 32px rgba(0,0,0,0.5)}
+  50%{box-shadow:0 0 0 1px rgba(6,182,212,0.5),0 0 60px rgba(6,182,212,0.6),0 8px 32px rgba(0,0,0,0.5)}
+}
+
+.logo-name{
+  font-size:32px;font-weight:700;letter-spacing:-1px;
+  background:linear-gradient(135deg,#e4e4e7 0%,#a1a1aa 50%,#e4e4e7 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:nameShimmer 4s linear infinite;
+}
+@keyframes nameShimmer{
+  0%{background-position:0% center}
+  100%{background-position:200% center}
+}
+
+.logo-tagline{
+  font-size:12px;color:#52525b;letter-spacing:0.12em;text-transform:uppercase;
+  margin-top:-8px;
+}
+
+/* ── Divider ──────────────────────────────────────────────────────────────── */
+.divider{
+  width:100%;height:1px;margin:28px 0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
+}
+
+/* ── Screens ──────────────────────────────────────────────────────────────── */
+.screen{
+  width:100%;flex:1;display:flex;flex-direction:column;align-items:center;
+  opacity:0;transform:translateY(20px);pointer-events:none;
+  transition:opacity 0.5s cubic-bezier(0.16,1,0.3,1),transform 0.5s cubic-bezier(0.16,1,0.3,1);
+  position:absolute;
+}
+.screen.active{
+  opacity:1;transform:translateY(0);pointer-events:all;position:relative;
+}
+
+/* ── Welcome screen ───────────────────────────────────────────────────────── */
+.welcome-title{
+  font-size:20px;font-weight:600;color:#f4f4f5;text-align:center;
+  margin-bottom:8px;
+}
+.welcome-sub{
+  font-size:13px;color:#71717a;text-align:center;line-height:1.6;
+  max-width:340px;
+}
+
+/* ── Feature pills ────────────────────────────────────────────────────────── */
+.features{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin:24px 0;width:100%;
+}
+.feature{
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:12px;padding:14px 16px;
+  display:flex;align-items:center;gap:10px;
+  transition:border-color 0.3s,background 0.3s;
+}
+.feature:hover{
+  background:rgba(6,182,212,0.06);
+  border-color:rgba(6,182,212,0.2);
+}
+.feature-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(6,182,212,0.1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.feature-icon svg{width:16px;height:16px;stroke:#06b6d4;fill:none;stroke-width:1.8;stroke-linecap:round}
+.feature-text{font-size:11px;color:#a1a1aa;line-height:1.4}
+.feature-text strong{display:block;font-size:12px;color:#d4d4d8;font-weight:500;margin-bottom:2px}
+
+/* ── Install path ─────────────────────────────────────────────────────────── */
+.path-label{
+  font-size:11px;color:#52525b;letter-spacing:0.06em;text-transform:uppercase;
+  align-self:flex-start;margin-bottom:6px;
+}
+.path-input{
+  width:100%;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
+  padding:10px 14px;font-size:12px;color:#71717a;
+  font-family:'Consolas',monospace;
+  outline:none;cursor:default;
+}
+
+/* ── Existing install notice ──────────────────────────────────────────────── */
+.existing-notice{
+  width:100%;background:rgba(251,191,36,0.06);
+  border:1px solid rgba(251,191,36,0.2);border-radius:12px;
+  padding:14px 16px;margin-bottom:16px;
+  display:flex;align-items:flex-start;gap:10px;
+  display:none;
+}
+.existing-notice.visible{display:flex}
+.existing-notice svg{width:18px;height:18px;stroke:#fbbf24;fill:none;stroke-width:1.8;flex-shrink:0;margin-top:1px}
+.existing-notice-text{font-size:12px;color:#a16207;line-height:1.5}
+.existing-notice-text strong{color:#fbbf24;display:block;margin-bottom:2px}
+
+/* ── Reinstall options ────────────────────────────────────────────────────── */
+.reinstall-options{
+  width:100%;display:none;gap:10px;flex-direction:column;margin-bottom:16px;
+}
+.reinstall-options.visible{display:flex}
+.reinstall-btn{
+  width:100%;padding:12px 16px;border-radius:10px;border:none;
+  cursor:pointer;font-size:13px;font-weight:500;
+  display:flex;align-items:center;gap:10px;
+  transition:all 0.2s;
+}
+.reinstall-btn.update{
+  background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:#22d3ee;
+}
+.reinstall-btn.update:hover{background:rgba(6,182,212,0.18);border-color:rgba(6,182,212,0.4)}
+.reinstall-btn.uninstall{
+  background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;
+}
+.reinstall-btn.uninstall:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35)}
+.reinstall-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+
+/* ── Progress screen ──────────────────────────────────────────────────────── */
+.progress-title{
+  font-size:18px;font-weight:600;color:#f4f4f5;margin-bottom:6px;text-align:center;
+}
+.progress-sub{
+  font-size:12px;color:#52525b;margin-bottom:32px;text-align:center;
+}
+
+.progress-ring-wrap{
+  position:relative;width:120px;height:120px;margin-bottom:28px;
+}
+.progress-ring-wrap svg{transform:rotate(-90deg)}
+.progress-ring-bg{fill:none;stroke:#18181b;stroke-width:6}
+.progress-ring-fill{
+  fill:none;stroke:url(#ringGrad);stroke-width:6;stroke-linecap:round;
+  stroke-dasharray:339;stroke-dashoffset:339;
+  transition:stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.progress-pct{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  font-size:26px;font-weight:700;color:#f4f4f5;letter-spacing:-1px;
+}
+.progress-pct span{font-size:11px;font-weight:400;color:#52525b;letter-spacing:0;}
+
+.progress-bar-wrap{width:100%;margin-bottom:12px}
+.progress-bar-track{
+  width:100%;height:4px;background:#18181b;border-radius:99px;overflow:hidden;
+}
+.progress-bar-fill{
+  height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,#0e7490,#06b6d4,#22d3ee);
+  background-size:200% 100%;
+  animation:barMove 1.5s linear infinite;
+  box-shadow:0 0 10px rgba(6,182,212,0.5);
+  transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes barMove{
+  0%{background-position:200% 0}
+  100%{background-position:0% 0}
+}
+
+.progress-step{
+  font-size:12px;color:#52525b;text-align:center;
+  height:20px;transition:all 0.3s;
+}
+
+/* ── Steps indicator ──────────────────────────────────────────────────────── */
+.steps-log{
+  width:100%;margin-top:16px;
+  display:flex;flex-direction:column;gap:6px;
+  max-height:120px;overflow:hidden;
+}
+.step-item{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:#3f3f46;
+  animation:stepIn 0.3s ease-out both;
+  transition:color 0.3s;
+}
+.step-item.done{color:#71717a}
+.step-item.active{color:#06b6d4}
+.step-dot{
+  width:6px;height:6px;border-radius:50%;background:#27272a;flex-shrink:0;
+  transition:all 0.3s;
+}
+.step-item.done .step-dot{background:#22c55e}
+.step-item.active .step-dot{background:#06b6d4;box-shadow:0 0 6px rgba(6,182,212,0.8);animation:dotPulse 1s ease-in-out infinite}
+@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes stepIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Done screen ──────────────────────────────────────────────────────────── */
+.done-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+  animation:doneScale 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+.done-icon svg{width:36px;height:36px;stroke:#22c55e;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@keyframes doneScale{from{scale:0;opacity:0}to{scale:1;opacity:1}}
+.done-title{font-size:22px;font-weight:700;color:#f4f4f5;margin-bottom:8px;text-align:center}
+.done-sub{font-size:13px;color:#52525b;text-align:center;line-height:1.6;max-width:320px;margin-bottom:28px}
+
+/* ── Uninstall done ───────────────────────────────────────────────────────── */
+.undone-icon{
+  width:80px;height:80px;border-radius:50%;
+  background:rgba(239,68,68,0.08);border:2px solid rgba(239,68,68,0.2);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+  animation:doneScale 0.6s cubic-bezier(0.16,1,0.3,1) both;
+}
+.undone-icon svg{width:36px;height:36px;stroke:#f87171;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Buttons ──────────────────────────────────────────────────────────────── */
+.btn{
+  border:none;border-radius:12px;padding:0 28px;height:44px;
+  font-size:14px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  position:relative;overflow:hidden;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.1) 0%,transparent 60%);
+  opacity:0;transition:opacity 0.2s;
+}
+.btn:hover::after{opacity:1}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+
+.btn-primary{
+  background:linear-gradient(135deg,#0e7490,#06b6d4);color:#fff;
+  box-shadow:0 4px 20px rgba(6,182,212,0.3),0 0 0 1px rgba(6,182,212,0.2);
+}
+.btn-primary:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 30px rgba(6,182,212,0.4),0 0 0 1px rgba(6,182,212,0.3);
+}
+.btn-primary:active{transform:translateY(0)}
+
+.btn-ghost{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);color:#71717a;
+}
+.btn-ghost:hover{background:rgba(255,255,255,0.07);color:#a1a1aa}
+
+.btn-danger{
+  background:rgba(239,68,68,0.1);
+  border:1px solid rgba(239,68,68,0.2);color:#f87171;
+}
+.btn-danger:hover{background:rgba(239,68,68,0.18)}
+
+.btn-row{display:flex;gap:10px;width:100%;justify-content:flex-end;margin-top:auto;padding-top:16px}
+.btn-row-center{display:flex;gap:10px;flex-direction:column;align-items:center;width:100%}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+.footer{
+  position:absolute;bottom:16px;left:0;right:0;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:0 48px;
+}
+.footer-left{font-size:10px;color:#27272a}
+.footer-right{
+  font-size:10px;color:#27272a;cursor:pointer;
+  text-decoration:underline;text-underline-offset:2px;
+}
+.footer-right:hover{color:#52525b}
+
+/* ── Animations ───────────────────────────────────────────────────────────── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:translateY(0)}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="drag-bar"></div>
+  <div class="accent-bar"></div>
+
+  <!-- Window controls -->
+  <div class="win-controls">
+    <button class="win-btn minimize" onclick="window.installer.quit()" title="Minimize">–</button>
+    <button class="win-btn close"    onclick="window.installer.quit()" title="Close">✕</button>
+  </div>
+
+  <!-- Particles canvas -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Background effects -->
+  <div class="grid"></div>
+  <div class="glow-cyan"></div>
+  <div class="glow-purple"></div>
+
+  <!-- SVG defs for ring gradient -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%"   stop-color="#0e7490"/>
+        <stop offset="100%" stop-color="#22d3ee"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="content">
+
+    <!-- Logo (always visible) -->
+    <div class="logo-wrap">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <line x1="12" y1="2"  x2="12" y2="5"/><rect x="9"  y="5"  width="6" height="7" rx="1"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+          <line x1="5"  y1="4"  x2="5"  y2="7"/><rect x="2"  y="7"  width="6" height="5" rx="1"/>
+          <line x1="5"  y1="12" x2="5"  y2="15"/>
+          <line x1="19" y1="6"  x2="19" y2="9"/><rect x="16" y="9"  width="6" height="4" rx="1"/>
+          <line x1="19" y1="13" x2="19" y2="16"/>
+        </svg>
+      </div>
+      <div class="logo-name">AxiomPips</div>
+      <div class="logo-tagline">Precision Tools for Smarter Trading</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ── SCREEN 1: Welcome / Existing install ── -->
+    <div class="screen active" id="screen-welcome" style="width:100%;display:flex;flex-direction:column">
+
+      <div id="existing-notice" class="existing-notice">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <div class="existing-notice-text">
+          <strong id="existing-notice-title">Already Installed</strong>
+          <span id="existing-notice-body">AxiomPips is already installed. Choose an action below.</span>
+        </div>
+      </div>
+
+      <div id="reinstall-options" class="reinstall-options">
+        <button class="reinstall-btn update" onclick="handleUpdate()">
+          <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Update to latest version
+        </button>
+        <button class="reinstall-btn uninstall" onclick="handleUninstall()">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          Uninstall AxiomPips
+        </button>
+      </div>
+
+      <div id="fresh-install-section">
+        <p class="welcome-title">Welcome to AxiomPips</p>
+        <p class="welcome-sub">Professional forex calculators and trading tools, now as a native desktop app.</p>
+
+        <div class="features" style="margin-top:20px">
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+            <div class="feature-text"><strong>Instant Launch</strong>No browser needed</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="feature-text"><strong>Private & Secure</strong>Your data stays local</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="feature-text"><strong>13+ Calculators</strong>All pro tools included</div>
+          </div>
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="feature-text"><strong>Always Current</strong>Live data via internet</div>
+          </div>
+        </div>
+
+        <div style="width:100%;margin-bottom:16px">
+          <p class="path-label">Install Location</p>
+          <div class="path-input" id="install-path-display">Loading…</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="window.installer.quit()">Cancel</button>
+        <button class="btn btn-primary" id="install-btn" onclick="startInstall()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Install AxiomPips
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 2: Installing ── -->
+    <div class="screen" id="screen-progress" style="width:100%;display:flex;flex-direction:column;align-items:center">
+      <p class="progress-title" id="progress-title">Installing AxiomPips…</p>
+      <p class="progress-sub"  id="progress-sub">Please wait while we set everything up</p>
+
+      <div class="progress-ring-wrap">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle class="progress-ring-bg"   cx="60" cy="60" r="54"/>
+          <circle class="progress-ring-fill" cx="60" cy="60" r="54" id="progress-ring"/>
+        </svg>
+        <div class="progress-pct">
+          <span id="pct-num">0</span>%<span id="pct-label">Installing</span>
+        </div>
+      </div>
+
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <p class="progress-step" id="progress-step-text">Preparing…</p>
+
+      <div class="steps-log" id="steps-log"></div>
+    </div>
+
+    <!-- ── SCREEN 3: Done ── -->
+    <div class="screen" id="screen-done" style="width:100%;display:flex;flex-direction:column;align-items:center">
+      <div class="done-icon">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <p class="done-title">You're all set!</p>
+      <p class="done-sub">AxiomPips has been installed successfully.<br/>Your precision trading toolkit is ready.</p>
+      <div class="btn-row-center">
+        <button class="btn btn-primary" onclick="window.installer.launchApp()" style="width:100%;justify-content:center">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Launch AxiomPips
+        </button>
+        <button class="btn btn-ghost" onclick="window.installer.quit()" style="width:100%;justify-content:center">
+          Close Installer
+        </button>
+      </div>
+    </div>
+
+    <!-- ── SCREEN 4: Uninstalled ── -->
+    <div class="screen" id="screen-uninstalled" style="width:100%;display:flex;flex-direction:column;align-items:center">
+      <div class="undone-icon">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </div>
+      <p class="done-title" style="color:#f4f4f5">Uninstalled</p>
+      <p class="done-sub">AxiomPips has been removed from your computer.<br/>You can always reinstall it later.</p>
+      <div class="btn-row-center">
+        <button class="btn btn-ghost" onclick="window.installer.openWebsite()" style="width:100%;justify-content:center">
+          Visit axiompips.com
+        </button>
+        <button class="btn btn-ghost" onclick="window.installer.quit()" style="width:100%;justify-content:center">
+          Close
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- Footer -->
+  <div class="footer">
+    <span class="footer-left">AxiomPips v0.1.0 · Windows x64</span>
+    <span class="footer-right" onclick="window.installer.openWebsite()">axiompips.com</span>
+  </div>
+</div>
+
+<script>
+// ── Particle system ─────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+canvas.width  = 540;
+canvas.height = 680;
+
+const PARTICLES = [];
+const COUNT = 55;
+
+for (let i = 0; i < COUNT; i++) {
+  PARTICLES.push({
+    x:     Math.random() * 540,
+    y:     Math.random() * 680,
+    r:     Math.random() * 1.4 + 0.3,
+    dx:    (Math.random() - 0.5) * 0.3,
+    dy:    (Math.random() - 0.5) * 0.3,
+    alpha: Math.random() * 0.4 + 0.05,
+    hue:   Math.random() > 0.7 ? 187 : 263,
+  });
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, 540, 680);
+  PARTICLES.forEach(p => {
+    p.x += p.dx; p.y += p.dy;
+    if (p.x < 0) p.x = 540;
+    if (p.x > 540) p.x = 0;
+    if (p.y < 0) p.y = 680;
+    if (p.y > 680) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${p.hue}, 80%, 65%, ${p.alpha})`;
+    ctx.fill();
+  });
+
+  // Draw lines between nearby particles
+  for (let i = 0; i < PARTICLES.length; i++) {
+    for (let j = i + 1; j < PARTICLES.length; j++) {
+      const dx   = PARTICLES[i].x - PARTICLES[j].x;
+      const dy   = PARTICLES[i].y - PARTICLES[j].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < 80) {
+        ctx.beginPath();
+        ctx.moveTo(PARTICLES[i].x, PARTICLES[i].y);
+        ctx.lineTo(PARTICLES[j].x, PARTICLES[j].y);
+        ctx.strokeStyle = `rgba(6,182,212,${0.06 * (1 - dist / 80)})`;
+        ctx.lineWidth   = 0.5;
+        ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── Screen management ────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  setTimeout(() => document.getElementById(id)?.classList.add('active'), 50);
+}
+
+// ── State ────────────────────────────────────────────────────────────────────
+let existingInstall = null;
+let installPath     = '';
+let isUninstalling  = false;
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+async function init() {
+  const existing = await window.installer.checkExisting();
+  existingInstall = existing;
+  installPath     = existing.path;
+
+  document.getElementById('install-path-display').textContent = installPath;
+
+  if (existing.installed) {
+    document.getElementById('existing-notice').classList.add('visible');
+    document.getElementById('existing-notice-title').textContent =
+      `Already Installed  •  v${existing.version || '?'}`;
+    document.getElementById('reinstall-options').classList.add('visible');
+    document.getElementById('fresh-install-section').style.display = 'none';
+    document.getElementById('install-btn').style.display = 'none';
+  }
+}
+init();
+
+// ── Progress update ──────────────────────────────────────────────────────────
+const completedSteps = [];
+
+window.installer.onProgress(({ pct, msg }) => {
+  // Ring
+  const circumference = 339;
+  const offset = circumference - (pct / 100) * circumference;
+  document.getElementById('progress-ring').style.strokeDashoffset = offset;
+
+  // Bar
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  // Percent
+  document.getElementById('pct-num').textContent  = pct;
+  document.getElementById('progress-step-text').textContent = msg;
+
+  // Steps log
+  const log = document.getElementById('steps-log');
+  // Mark previous as done
+  log.querySelectorAll('.step-item.active').forEach(el => {
+    el.classList.remove('active');
+    el.classList.add('done');
+  });
+  // Add new step
+  const item = document.createElement('div');
+  item.className = 'step-item active';
+  item.innerHTML = `<div class="step-dot"></div><span>${msg}</span>`;
+  log.appendChild(item);
+  log.scrollTop = log.scrollHeight;
+
+  if (pct >= 100) {
+    setTimeout(() => {
+      if (isUninstalling) showScreen('screen-uninstalled');
+      else showScreen('screen-done');
+    }, 600);
+  }
+});
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+async function startInstall() {
+  isUninstalling = false;
+  document.getElementById('progress-title').textContent = 'Installing AxiomPips…';
+  document.getElementById('progress-sub').textContent   = 'Setting up your trading toolkit';
+  document.getElementById('pct-label').textContent      = 'Installing';
+  showScreen('screen-progress');
+  await window.installer.startInstall(installPath);
+}
+
+async function handleUpdate() {
+  isUninstalling = false;
+  document.getElementById('progress-title').textContent = 'Updating AxiomPips…';
+  document.getElementById('progress-sub').textContent   = 'Installing the latest version';
+  document.getElementById('pct-label').textContent      = 'Updating';
+  showScreen('screen-progress');
+  await window.installer.startInstall(installPath);
+}
+
+async function handleUninstall() {
+  isUninstalling = true;
+  document.getElementById('progress-title').textContent = 'Uninstalling AxiomPips…';
+  document.getElementById('progress-sub').textContent   = 'Removing all files and shortcuts';
+  document.getElementById('pct-label').textContent      = 'Removing';
+  showScreen('screen-progress');
+  await window.installer.startUninstall(existingInstall?.path || installPath);
+}
+</script>
+</body>
+</html>

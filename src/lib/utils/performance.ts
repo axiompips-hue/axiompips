@@ -1,28 +1,35 @@
 // File: src/lib/utils/performance.ts
+// Canonical utility functions — import from here, not from the hook files.
 
 /**
- * Debounce function to limit how often a function can be called.
+ * Debounce: delays invoking `func` until `wait` ms after the last call.
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
-): (...args: Parameters<T>) => void {
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return function (this: any, ...args: Parameters<T>) {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-
+  function debounced(this: any, ...args: Parameters<T>) {
+    if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
       func.apply(this, args);
       timeoutId = null;
     }, wait);
+  }
+
+  debounced.cancel = () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
   };
+
+  return debounced;
 }
 
 /**
- * Throttle function to ensure a function is called at most once per interval.
+ * Throttle: invokes `func` at most once per `limit` ms.
  */
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
@@ -42,7 +49,8 @@ export function throttle<T extends (...args: any[]) => any>(
 }
 
 /**
- * Memoize function results based on arguments.
+ * Memoize: caches results keyed by serialized arguments.
+ * Uses a Map so cache grows at most once per unique input.
  */
 export function memoize<T extends (...args: any[]) => any>(
   func: T,
@@ -52,11 +60,7 @@ export function memoize<T extends (...args: any[]) => any>(
 
   return function (this: any, ...args: Parameters<T>): ReturnType<T> {
     const key = resolver ? resolver(...args) : JSON.stringify(args);
-
-    if (cache.has(key)) {
-      return cache.get(key)!;
-    }
-
+    if (cache.has(key)) return cache.get(key)!;
     const result = func.apply(this, args);
     cache.set(key, result);
     return result;
@@ -64,41 +68,22 @@ export function memoize<T extends (...args: any[]) => any>(
 }
 
 /**
- * Measure execution time of a function.
+ * measureTime: logs execution time in development only.
  */
-export function measureTime<T>(
-  name: string,
-  func: () => T
-): T {
-  if (process.env.NODE_ENV !== "development") {
-    return func();
-  }
-
+export function measureTime<T>(name: string, func: () => T): T {
+  if (process.env.NODE_ENV !== "development") return func();
   const start = performance.now();
   const result = func();
   const end = performance.now();
-
   console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`);
-
   return result;
 }
 
-/**
- * Check if we're running on the client side.
- */
-export function isClient(): boolean {
-  return typeof window !== "undefined";
-}
+export const isClient = (): boolean => typeof window !== "undefined";
+export const isServer = (): boolean => typeof window === "undefined";
 
 /**
- * Check if we're running on the server side.
- */
-export function isServer(): boolean {
-  return typeof window === "undefined";
-}
-
-/**
- * Request idle callback with fallback.
+ * requestIdleCallback with fallback for environments that don't support it.
  */
 export function requestIdleCallback(
   callback: () => void,
@@ -107,6 +92,24 @@ export function requestIdleCallback(
   if (typeof window !== "undefined" && "requestIdleCallback" in window) {
     (window as any).requestIdleCallback(callback, options);
   } else {
-    setTimeout(callback, options?.timeout || 1);
+    setTimeout(callback, options?.timeout ?? 1);
   }
+}
+
+/**
+ * Shallow equality check — faster than JSON.stringify for flat objects/arrays.
+ */
+export function shallowEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== "object" || typeof b !== "object") return false;
+  if (a === null || b === null) return false;
+
+  const keysA = Object.keys(a as object);
+  const keysB = Object.keys(b as object);
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    if ((a as any)[key] !== (b as any)[key]) return false;
+  }
+  return true;
 }

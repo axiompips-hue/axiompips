@@ -21,20 +21,41 @@ export const navItems: NavItem[] = [
   { label: "About", href: "/about" },
 ];
 
+// ─── Module-level cache ───────────────────────────────────────────────────────
+// getPremiumStatus is called once per session and cached here.
+// Every Nav mount reads from the same promise — no duplicate network requests
+// on navigation, no stale closure issues.
+let premiumStatusPromise: ReturnType<typeof getPremiumStatus> | null = null;
+
+function getCachedPremiumStatus() {
+  if (!premiumStatusPromise) {
+    premiumStatusPromise = getPremiumStatus().catch(() => ({
+      isPremium: false,
+      isOnTrial: false,
+    }));
+  }
+  return premiumStatusPromise;
+}
+
+// Call once at module init so the promise is already in-flight when the
+// component first renders (warm start).
+if (typeof window !== "undefined") {
+  getCachedPremiumStatus();
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function Nav() {
   const pathname = usePathname();
   const [isPremium, setIsPremium] = useState(false);
   const [isOnTrial, setIsOnTrial] = useState(false);
 
   useEffect(() => {
-    getPremiumStatus()
-      .then((s) => {
-        setIsPremium(s.isPremium);
-        setIsOnTrial(s.isOnTrial);
-      })
-      .catch(() => {
-        // Silently ignore — non-critical
-      });
+    getCachedPremiumStatus().then((s) => {
+      setIsPremium(s.isPremium);
+      setIsOnTrial(s.isOnTrial);
+    });
+    // No deps: runs once, reads from cache
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const premiumHref = "/premium";
@@ -75,9 +96,7 @@ export function Nav() {
         );
       })}
 
-      {/* Premium nav item */}
       {isUserPremiumOrTrial ? (
-        // Already premium/trial — show a subtle badge linking to profile
         <Link
           href="/profile"
           className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-150 text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
@@ -86,7 +105,6 @@ export function Nav() {
           {isPremium ? "Premium" : "Trial"}
         </Link>
       ) : (
-        // Free user — highlight the upgrade link
         <Link
           href={premiumHref}
           data-guide="nav-premium"

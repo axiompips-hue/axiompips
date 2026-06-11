@@ -31,31 +31,12 @@ const config: Config = {
           950: "#0d0e11",
         },
       },
+      // Reference the CSS variables injected by next/font
       fontFamily: {
-        sans: [
-          "Inter",
-          "ui-sans-serif",
-          "system-ui",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "Roboto",
-          "Helvetica Neue",
-          "Arial",
-          "sans-serif",
-        ],
-        mono: [
-          "JetBrains Mono",
-          "ui-monospace",
-          "SFMono-Regular",
-          "Menlo",
-          "Monaco",
-          "Consolas",
-          "monospace",
-        ],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
       fontSize: {
-        // Slightly tighter line heights for headings
         "2xl": ["1.5rem", { lineHeight: "2rem" }],
         "3xl": ["1.875rem", { lineHeight: "2.25rem" }],
         "4xl": ["2.25rem", { lineHeight: "2.5rem" }],
