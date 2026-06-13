@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
+      - name: Install main dependencies
         run: npm ci
 
       - name: Create .env.local
@@ -28,17 +28,13 @@ jobs:
           echo RESEND_API_KEY=${{ secrets.RESEND_API_KEY }} >> .env.local
         shell: bash
 
-      - name: Build Next.js app
-        run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      - name: Install installer dependencies
+        run: npm ci
+        working-directory: electron-installer
 
       - name: Build beautiful custom installer
-        run: |
-          cd electron-installer
-          npm install
-          npm run build:installer
+        run: npm run build:installer
+        working-directory: electron-installer
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
