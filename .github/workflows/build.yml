@@ -18,18 +18,8 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install main dependencies
-        run: npm ci
-
-      - name: Create .env.local
-        run: |
-          echo NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} >> .env.local
-          echo NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} >> .env.local
-          echo RESEND_API_KEY=${{ secrets.RESEND_API_KEY }} >> .env.local
-        shell: bash
-
       - name: Install installer dependencies
-        run: npm ci
+        run: npm install
         working-directory: electron-installer
 
       - name: Build beautiful custom installer
