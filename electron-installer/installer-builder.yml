@@ -1,5 +1,5 @@
 appId: com.axiompips.installer
-productName: AxiomPips
+productName: AxiomPips Installer
 copyright: "Copyright © 2025 AxiomPips"
 
 directories:
@@ -12,17 +12,10 @@ files:
 
 win:
   target:
-    - target: nsis
+    - target: portable
   artifactName: "AxiomPips-Setup.exe"
   requestedExecutionLevel: asInvoker
   signingHashAlgorithms: null
   sign: null
-
-nsis:
-  oneClick: true
-  perMachine: false
-  createDesktopShortcut: true
-  createStartMenuShortcut: true
-  shortcutName: AxiomPips Installer
 
 publish: null
