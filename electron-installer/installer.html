@@ -2,720 +2,727 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>AxiomPips Installer</title>
+<title>AxiomPips Setup</title>
 <style>
-/* ── Reset ────────────────────────────────────────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{width:540px;height:680px;overflow:hidden;background:transparent;
-  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
-  -webkit-font-smoothing:antialiased;user-select:none;-webkit-app-region:no-drag}
+html,body{
+  width:900px;height:560px;overflow:hidden;background:transparent;
+  font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;user-select:none;-webkit-app-region:no-drag;
+}
 
-/* ── Shell ────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════
+   SHELL
+══════════════════════════════════════ */
 .shell{
-  width:540px;height:680px;position:relative;overflow:hidden;
-  background:#09090b;
+  width:900px;height:560px;position:relative;overflow:hidden;
+  background:#04040a;border-radius:20px;
   border:1px solid rgba(255,255,255,0.06);
-  border-radius:20px;
-  box-shadow:0 40px 120px rgba(0,0,0,0.9),0 0 0 1px rgba(6,182,212,0.08);
+  box-shadow:
+    0 0 0 1px rgba(6,182,212,0.04),
+    0 80px 240px rgba(0,0,0,0.98),
+    inset 0 1px 0 rgba(255,255,255,0.025);
 }
 
-/* ── Drag region ──────────────────────────────────────────────────────────── */
-.drag-bar{
-  position:absolute;top:0;left:0;right:0;height:48px;
-  -webkit-app-region:drag;z-index:100;
+/* ══════════════════════════════════════
+   INTRO OVERLAY
+══════════════════════════════════════ */
+#intro{
+  position:absolute;inset:0;z-index:9000;border-radius:20px;
+  background:radial-gradient(ellipse at 40% 40%,#080d1a 0%,#030305 60%,#020204 100%);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+#ic{position:absolute;inset:0;border-radius:20px}
+
+/* Intro hex grid */
+.ihex{
+  position:absolute;inset:0;border-radius:20px;
+  background-image:radial-gradient(circle,rgba(6,182,212,0.04) 1px,transparent 1px);
+  background-size:30px 30px;
+  animation:hexPulse 6s ease-in-out infinite;
+}
+@keyframes hexPulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* Intro scan */
+.iscan{
+  position:absolute;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(6,182,212,0.5),rgba(139,92,246,0.4),rgba(6,182,212,0.5),transparent);
+  box-shadow:0 0 15px rgba(6,182,212,0.4),0 0 40px rgba(6,182,212,0.15);
+  animation:iscan 4s linear infinite;opacity:0;
+}
+@keyframes iscan{0%{top:-2px;opacity:0}5%{opacity:1}95%{opacity:.8}100%{top:562px;opacity:0}}
+
+.intro-core{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center}
+
+/* Ring system */
+.ringsys{position:relative;width:180px;height:180px;margin-bottom:44px}
+.rg{position:absolute;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border:1px solid transparent}
+.rg1{
+  width:180px;height:180px;border-color:rgba(6,182,212,0.06);
+  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.0s both;
+}
+.rg2{
+  width:148px;height:148px;border-color:rgba(6,182,212,0.12);
+  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.08s both,rCW 30s linear infinite;
+}
+.rg2::before,.rg2::after{
+  content:'';position:absolute;width:7px;height:7px;border-radius:50%;
+  background:#06b6d4;box-shadow:0 0 12px rgba(6,182,212,1),0 0 30px rgba(6,182,212,0.6);
+  left:50%;transform:translateX(-50%);
+}
+.rg2::before{top:-3.5px}
+.rg2::after{bottom:-3.5px;background:#818cf8;box-shadow:0 0 12px rgba(139,92,246,1),0 0 30px rgba(139,92,246,0.6)}
+.rg3{
+  width:116px;height:116px;border-color:rgba(139,92,246,0.12);
+  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.16s both,rCCW 20s linear infinite;
+}
+.rg3::before{
+  content:'';position:absolute;width:5px;height:5px;border-radius:50%;
+  background:#818cf8;box-shadow:0 0 10px rgba(139,92,246,1);
+  right:-2.5px;top:50%;transform:translateY(-50%);
+}
+.rg4{
+  width:88px;height:88px;border-color:rgba(6,182,212,0.08);
+  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.24s both,rCW 15s linear infinite;
 }
 
-/* ── Window controls ──────────────────────────────────────────────────────── */
-.win-controls{
-  position:absolute;top:14px;right:16px;z-index:101;
-  display:flex;gap:8px;-webkit-app-region:no-drag;
+.ilogo{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(135deg,#0c4a6e 0%,#0e7490 45%,#06b6d4 100%);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  box-shadow:
+    0 0 0 1px rgba(6,182,212,0.5),
+    0 0 60px rgba(6,182,212,0.6),
+    0 0 120px rgba(6,182,212,0.25),
+    0 20px 60px rgba(0,0,0,0.8),
+    inset 0 1px 0 rgba(255,255,255,0.25);
+  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.32s both,ilogopulse 3s ease-in-out infinite;
 }
-.win-btn{
-  width:14px;height:14px;border-radius:50%;border:none;cursor:pointer;
-  transition:all 0.2s;display:flex;align-items:center;justify-content:center;
-  font-size:8px;color:transparent;
+.ilogo::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,0.22) 0%,transparent 55%);
 }
-.win-btn:hover{color:rgba(0,0,0,0.7)}
-.win-btn.close{background:#ff5f57}
-.win-btn.close:hover{background:#ff3b30}
-.win-btn.minimize{background:#febc2e}
-.win-btn.minimize:hover{background:#f0a500}
+/* sweep shimmer */
+.ilogo::after{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+  animation:sweep 3s ease-in-out 2s infinite;
+}
+@keyframes sweep{0%{left:-100%}100%{left:200%}}
+.ilogo svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}
 
-/* ── Canvas (particles) ───────────────────────────────────────────────────── */
-#canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
-
-/* ── Ambient glows ────────────────────────────────────────────────────────── */
-.glow-cyan{
-  position:absolute;top:-120px;left:50%;transform:translateX(-50%);
-  width:400px;height:300px;border-radius:50%;
-  background:radial-gradient(ellipse,rgba(6,182,212,0.15) 0%,transparent 70%);
-  pointer-events:none;animation:glowPulse 4s ease-in-out infinite;
-}
-.glow-purple{
-  position:absolute;bottom:-80px;right:-60px;
-  width:300px;height:200px;
-  background:radial-gradient(ellipse,rgba(139,92,246,0.10) 0%,transparent 70%);
-  pointer-events:none;animation:glowPulse 5s ease-in-out infinite reverse;
-}
-@keyframes glowPulse{
-  0%,100%{opacity:0.6;transform:translateX(-50%) scale(1)}
-  50%{opacity:1;transform:translateX(-50%) scale(1.1)}
+@keyframes ri{from{opacity:0;scale:.3}to{opacity:1;scale:1}}
+@keyframes rCW{to{rotate:360deg}}
+@keyframes rCCW{to{rotate:-360deg}}
+@keyframes ilogopulse{
+  0%,100%{box-shadow:0 0 0 1px rgba(6,182,212,0.5),0 0 60px rgba(6,182,212,0.6),0 0 120px rgba(6,182,212,0.25),0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.25)}
+  50%{box-shadow:0 0 0 1px rgba(6,182,212,0.7),0 0 90px rgba(6,182,212,0.8),0 0 180px rgba(6,182,212,0.35),0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.25)}
 }
 
-/* ── Grid ─────────────────────────────────────────────────────────────────── */
-.grid{
+.ibrand{
+  font-size:40px;font-weight:800;letter-spacing:-2px;
+  background:linear-gradient(135deg,#ffffff 0%,#94a3b8 50%,#ffffff 100%);
+  background-size:200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:ri .9s cubic-bezier(0.16,1,0.3,1) .6s both,bshim 5s linear 1.5s infinite;
+  margin-bottom:8px;
+}
+.itag{
+  font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+  color:rgba(6,182,212,0.55);margin-bottom:48px;
+  animation:ri .9s cubic-bezier(0.16,1,0.3,1) .75s both;
+}
+@keyframes bshim{0%{background-position:0%}100%{background-position:200%}}
+
+.iloader{width:260px;display:flex;flex-direction:column;align-items:center;gap:12px;animation:ri .5s ease 1s both}
+.ibar-bg{width:100%;height:1px;background:rgba(255,255,255,0.05);border-radius:99px;overflow:hidden}
+.ibar-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#0e7490,#06b6d4,#22d3ee);box-shadow:0 0 15px rgba(6,182,212,1);animation:ibarfill 2s cubic-bezier(.4,0,.2,1) 1.1s forwards}
+@keyframes ibarfill{0%{width:0%}55%{width:70%}100%{width:100%}}
+.istat{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,0.15);height:12px;transition:all .4s}
+
+/* ══════════════════════════════════════
+   WINDOW CONTROLS — crystal clear
+══════════════════════════════════════ */
+.wc{
+  position:absolute;top:0;right:0;z-index:8000;
+  display:flex;-webkit-app-region:no-drag;
+  border-bottom-left-radius:10px;overflow:hidden;
+}
+.wb{
+  width:46px;height:36px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0);transition:background .15s;
+  position:relative;
+}
+.wb:hover{background:rgba(255,255,255,0.05)}
+.wb.cl:hover{background:rgba(196,43,28,0.85)}
+.wb svg{
+  width:10px;height:10px;stroke:rgba(255,255,255,0.35);fill:none;
+  stroke-width:1.5;stroke-linecap:round;
+  transition:stroke .15s;pointer-events:none;
+}
+.wb:hover svg{stroke:rgba(255,255,255,0.9)}
+.wb.cl:hover svg{stroke:#fff}
+/* Divider between buttons */
+.wb+.wb::before{
+  content:'';position:absolute;left:0;top:10px;bottom:10px;
+  width:1px;background:rgba(255,255,255,0.05);
+}
+
+.drag{position:absolute;top:0;left:0;right:92px;height:40px;-webkit-app-region:drag;z-index:7000}
+
+/* ══════════════════════════════════════
+   TOP ACCENT
+══════════════════════════════════════ */
+.accent{
+  position:absolute;top:0;left:0;right:0;height:1px;z-index:30;border-radius:20px 20px 0 0;
+  background:linear-gradient(90deg,
+    transparent 0%,rgba(6,182,212,0) 8%,
+    rgba(6,182,212,.9) 25%,rgba(139,92,246,.7) 50%,
+    rgba(6,182,212,.9) 75%,rgba(6,182,212,0) 92%,transparent 100%);
+  background-size:300% 100%;
+  animation:acf 5s linear infinite;
+  box-shadow:0 0 30px rgba(6,182,212,.35),0 0 80px rgba(6,182,212,.1);
+}
+@keyframes acf{0%{background-position:100% 0}100%{background-position:-200% 0}}
+
+/* ══════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════ */
+.layout{position:relative;z-index:10;display:grid;grid-template-columns:280px 1fr;height:100%}
+
+/* ── LEFT ── */
+.left{
+  position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#070b17 0%,#040508 100%);
+  border-right:1px solid rgba(255,255,255,0.04);
+  display:flex;flex-direction:column;padding:44px 32px 28px;
+}
+.left::before{
+  content:'';position:absolute;top:-120px;left:-80px;
+  width:360px;height:360px;border-radius:50%;
+  background:radial-gradient(circle,rgba(6,182,212,0.09) 0%,transparent 65%);
+  animation:lgf 9s ease-in-out infinite;pointer-events:none;
+}
+.left::after{
+  content:'';position:absolute;bottom:-100px;right:-60px;
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,0.07) 0%,transparent 65%);
+  pointer-events:none;
+}
+@keyframes lgf{0%,100%{opacity:.5;transform:translate(0,0)}50%{opacity:1;transform:translate(12px,18px)}}
+
+.lgrid{
   position:absolute;inset:0;
   background-image:
-    linear-gradient(rgba(255,255,255,0.018) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,0.018) 1px,transparent 1px);
-  background-size:40px 40px;
-  mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%);
+    linear-gradient(rgba(6,182,212,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(6,182,212,0.022) 1px,transparent 1px);
+  background-size:26px 26px;
+  mask-image:radial-gradient(ellipse 120% 120% at 50% 40%,black 20%,transparent 100%);
+}
+
+/* Logo */
+.llogo{position:relative;z-index:2;margin-bottom:auto}
+.lic{
+  width:58px;height:58px;border-radius:16px;
+  background:linear-gradient(135deg,#0c4a6e,#0e7490 50%,#06b6d4);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;margin-bottom:20px;
+  box-shadow:
+    0 0 0 1px rgba(6,182,212,0.28),
+    0 0 35px rgba(6,182,212,0.32),
+    0 8px 28px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+  animation:licf 4.5s ease-in-out infinite;
+}
+.lic::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 55%)}
+.lic::after{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+  animation:sweep 4s ease-in-out 1s infinite;
+}
+.lic svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}
+@keyframes licf{
+  0%,100%{box-shadow:0 0 0 1px rgba(6,182,212,0.28),0 0 35px rgba(6,182,212,0.32),0 8px 28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.18)}
+  50%{box-shadow:0 0 0 1px rgba(6,182,212,0.45),0 0 55px rgba(6,182,212,0.5),0 8px 28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.18)}
+}
+.ln{font-size:22px;font-weight:700;letter-spacing:-.5px;background:linear-gradient(135deg,#f4f4f5,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
+.lt{font-size:9px;color:rgba(6,182,212,0.55);letter-spacing:.18em;text-transform:uppercase}
+
+/* Step nav */
+.snav{position:relative;z-index:2;display:flex;flex-direction:column;gap:0;margin-bottom:28px}
+.si{display:flex;align-items:center;gap:11px;padding:9px 0;position:relative}
+.si:not(:last-child)::after{
+  content:'';position:absolute;left:11px;top:32px;
+  width:1px;height:calc(100% - 8px);
+  background:rgba(255,255,255,0.05);
+}
+.sd{
+  width:23px;height:23px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;position:relative;z-index:1;
+  transition:all .45s cubic-bezier(0.16,1,0.3,1);
+}
+.sd.p{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);color:#27272a}
+.sd.a{
+  background:linear-gradient(135deg,#0e7490,#06b6d4);color:#fff;
+  box-shadow:0 0 0 3px rgba(6,182,212,0.12),0 0 16px rgba(6,182,212,0.45);
+  animation:apu 2s ease-in-out infinite;
+}
+.sd.d{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:#22c55e;font-size:11px}
+@keyframes apu{0%,100%{box-shadow:0 0 0 3px rgba(6,182,212,0.12),0 0 16px rgba(6,182,212,0.45)}50%{box-shadow:0 0 0 5px rgba(6,182,212,0.08),0 0 28px rgba(6,182,212,0.6)}}
+.sl{font-size:11px;font-weight:500;transition:color .3s}
+.si .sl{color:#27272a}
+.si.a .sl{color:#e4e4e7}
+.si.d .sl{color:#3f3f46}
+
+.lfooter{position:relative;z-index:2;font-size:9px;color:#1f1f23;letter-spacing:.05em}
+
+/* ── RIGHT ── */
+.right{
+  position:relative;overflow:hidden;
+  background:linear-gradient(155deg,#060710 0%,#040407 100%);
+  display:flex;flex-direction:column;padding:44px 44px 32px;
+}
+.right::before{
+  content:'';position:absolute;top:-80px;right:-80px;
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(139,92,246,0.04) 0%,transparent 65%);
   pointer-events:none;
 }
 
-/* ── Top accent bar ───────────────────────────────────────────────────────── */
-.accent-bar{
-  position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,#06b6d4,#818cf8,#06b6d4,transparent);
-  background-size:200% 100%;
-  animation:barShift 3s linear infinite;
-  border-radius:20px 20px 0 0;
-}
-@keyframes barShift{
-  0%{background-position:200% 0}
-  100%{background-position:-200% 0}
-}
-
-/* ── Content ──────────────────────────────────────────────────────────────── */
-.content{
-  position:relative;z-index:10;
-  height:100%;display:flex;flex-direction:column;
-  align-items:center;padding:60px 48px 40px;
-}
-
-/* ── Logo ─────────────────────────────────────────────────────────────────── */
-.logo-wrap{
-  display:flex;flex-direction:column;align-items:center;gap:16px;
-  animation:fadeUp 0.7s cubic-bezier(0.16,1,0.3,1) both;
-}
-.logo-icon{
-  width:72px;height:72px;border-radius:20px;
-  background:linear-gradient(135deg,#0e7490 0%,#06b6d4 100%);
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 0 1px rgba(6,182,212,0.3),0 0 40px rgba(6,182,212,0.4),0 8px 32px rgba(0,0,0,0.5);
-  animation:iconPulse 3s ease-in-out infinite;
-  position:relative;overflow:hidden;
-}
-.logo-icon::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%);
-}
-.logo-icon svg{width:38px;height:38px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
-@keyframes iconPulse{
-  0%,100%{box-shadow:0 0 0 1px rgba(6,182,212,0.3),0 0 40px rgba(6,182,212,0.4),0 8px 32px rgba(0,0,0,0.5)}
-  50%{box-shadow:0 0 0 1px rgba(6,182,212,0.5),0 0 60px rgba(6,182,212,0.6),0 8px 32px rgba(0,0,0,0.5)}
-}
-
-.logo-name{
-  font-size:32px;font-weight:700;letter-spacing:-1px;
-  background:linear-gradient(135deg,#e4e4e7 0%,#a1a1aa 50%,#e4e4e7 100%);
-  background-size:200% auto;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:nameShimmer 4s linear infinite;
-}
-@keyframes nameShimmer{
-  0%{background-position:0% center}
-  100%{background-position:200% center}
-}
-
-.logo-tagline{
-  font-size:12px;color:#52525b;letter-spacing:0.12em;text-transform:uppercase;
-  margin-top:-8px;
-}
-
-/* ── Divider ──────────────────────────────────────────────────────────────── */
-.divider{
-  width:100%;height:1px;margin:28px 0;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.06),transparent);
-}
-
-/* ── Screens ──────────────────────────────────────────────────────────────── */
+/* Screens */
 .screen{
-  width:100%;flex:1;display:flex;flex-direction:column;align-items:center;
-  opacity:0;transform:translateY(20px);pointer-events:none;
-  transition:opacity 0.5s cubic-bezier(0.16,1,0.3,1),transform 0.5s cubic-bezier(0.16,1,0.3,1);
-  position:absolute;
+  width:100%;flex:1;display:flex;flex-direction:column;
+  opacity:0;transform:translateX(18px);pointer-events:none;
+  transition:opacity .5s cubic-bezier(0.16,1,0.3,1),transform .5s cubic-bezier(0.16,1,0.3,1);
+  position:absolute;top:44px;left:44px;right:44px;bottom:32px;
 }
-.screen.active{
-  opacity:1;transform:translateY(0);pointer-events:all;position:relative;
-}
+.screen.on{opacity:1;transform:translateX(0);pointer-events:all;position:relative;top:auto;left:auto;right:auto;bottom:auto}
 
-/* ── Welcome screen ───────────────────────────────────────────────────────── */
-.welcome-title{
-  font-size:20px;font-weight:600;color:#f4f4f5;text-align:center;
-  margin-bottom:8px;
-}
-.welcome-sub{
-  font-size:13px;color:#71717a;text-align:center;line-height:1.6;
-  max-width:340px;
-}
+.stitle{font-size:21px;font-weight:700;letter-spacing:-.4px;color:#f4f4f5;margin-bottom:5px}
+.ssub{font-size:11px;color:#3f3f46;line-height:1.7;margin-bottom:22px}
 
-/* ── Feature pills ────────────────────────────────────────────────────────── */
-.features{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;
-  margin:24px 0;width:100%;
+/* Features */
+.flist{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.fi{
+  display:flex;align-items:center;gap:13px;
+  background:rgba(255,255,255,0.016);
+  border:1px solid rgba(255,255,255,0.045);
+  border-radius:11px;padding:11px 15px;
+  transition:all .3s cubic-bezier(0.16,1,0.3,1);
+  position:relative;overflow:hidden;cursor:default;
 }
-.feature{
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.06);
-  border-radius:12px;padding:14px 16px;
-  display:flex;align-items:center;gap:10px;
-  transition:border-color 0.3s,background 0.3s;
+.fi::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+  background:linear-gradient(180deg,rgba(6,182,212,0.6),rgba(139,92,246,0.4));
+  transition:width .3s;border-radius:11px 0 0 11px;
 }
-.feature:hover{
-  background:rgba(6,182,212,0.06);
-  border-color:rgba(6,182,212,0.2);
+.fi:hover{background:rgba(6,182,212,0.035);border-color:rgba(6,182,212,0.1);transform:translateX(4px)}
+.fi:hover::before{width:2px}
+.fic{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.1);
+  display:flex;align-items:center;justify-content:center;
 }
-.feature-icon{
-  width:32px;height:32px;border-radius:8px;
-  background:rgba(6,182,212,0.1);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-}
-.feature-icon svg{width:16px;height:16px;stroke:#06b6d4;fill:none;stroke-width:1.8;stroke-linecap:round}
-.feature-text{font-size:11px;color:#a1a1aa;line-height:1.4}
-.feature-text strong{display:block;font-size:12px;color:#d4d4d8;font-weight:500;margin-bottom:2px}
+.fic svg{width:14px;height:14px;stroke:#06b6d4;fill:none;stroke-width:1.8;stroke-linecap:round}
+.ft{font-size:11px;font-weight:600;color:#d4d4d8;margin-bottom:1px}
+.fs{font-size:9px;color:#3f3f46}
 
-/* ── Install path ─────────────────────────────────────────────────────────── */
-.path-label{
-  font-size:11px;color:#52525b;letter-spacing:0.06em;text-transform:uppercase;
-  align-self:flex-start;margin-bottom:6px;
+/* Path */
+.prow{
+  background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.04);
+  border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:9px;margin-bottom:3px;
 }
-.path-input{
-  width:100%;background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.08);border-radius:10px;
-  padding:10px 14px;font-size:12px;color:#71717a;
-  font-family:'Consolas',monospace;
-  outline:none;cursor:default;
-}
+.prow svg{width:13px;height:13px;stroke:#27272a;fill:none;stroke-width:1.8;stroke-linecap:round;flex-shrink:0}
+.ptxt{font-size:9px;color:#27272a;font-family:'Consolas',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.phint{font-size:9px;color:#1c1c1e;margin-bottom:18px;padding-left:1px}
 
-/* ── Existing install notice ──────────────────────────────────────────────── */
-.existing-notice{
-  width:100%;background:rgba(251,191,36,0.06);
-  border:1px solid rgba(251,191,36,0.2);border-radius:12px;
-  padding:14px 16px;margin-bottom:16px;
-  display:flex;align-items:flex-start;gap:10px;
-  display:none;
+/* Existing */
+.en{
+  background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.1);
+  border-radius:9px;padding:10px 13px;margin-bottom:12px;
+  display:none;align-items:flex-start;gap:9px;
 }
-.existing-notice.visible{display:flex}
-.existing-notice svg{width:18px;height:18px;stroke:#fbbf24;fill:none;stroke-width:1.8;flex-shrink:0;margin-top:1px}
-.existing-notice-text{font-size:12px;color:#a16207;line-height:1.5}
-.existing-notice-text strong{color:#fbbf24;display:block;margin-bottom:2px}
+.en.show{display:flex}
+.en svg{width:14px;height:14px;stroke:#fbbf24;fill:none;stroke-width:1.8;flex-shrink:0;margin-top:1px}
+.ent{font-size:11px;font-weight:600;color:#fbbf24;margin-bottom:2px}
+.ens{font-size:9px;color:#713f12}
 
-/* ── Reinstall options ────────────────────────────────────────────────────── */
-.reinstall-options{
-  width:100%;display:none;gap:10px;flex-direction:column;margin-bottom:16px;
-}
-.reinstall-options.visible{display:flex}
-.reinstall-btn{
-  width:100%;padding:12px 16px;border-radius:10px;border:none;
-  cursor:pointer;font-size:13px;font-weight:500;
-  display:flex;align-items:center;gap:10px;
-  transition:all 0.2s;
-}
-.reinstall-btn.update{
-  background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:#22d3ee;
-}
-.reinstall-btn.update:hover{background:rgba(6,182,212,0.18);border-color:rgba(6,182,212,0.4)}
-.reinstall-btn.uninstall{
-  background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:#f87171;
-}
-.reinstall-btn.uninstall:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35)}
-.reinstall-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
+.rops{display:none;flex-direction:column;gap:6px;margin-bottom:14px}
+.rops.show{display:flex}
+.rb{display:flex;align-items:center;gap:8px;padding:9px 13px;border:none;border-radius:8px;cursor:pointer;font-size:10px;font-weight:600;transition:all .2s}
+.rb svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+.rb.u{background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);color:#22d3ee}
+.rb.u:hover{background:rgba(6,182,212,0.12);transform:translateX(4px)}
+.rb.x{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12);color:#f87171}
+.rb.x:hover{background:rgba(239,68,68,0.1);transform:translateX(4px)}
 
-/* ── Progress screen ──────────────────────────────────────────────────────── */
-.progress-title{
-  font-size:18px;font-weight:600;color:#f4f4f5;margin-bottom:6px;text-align:center;
-}
-.progress-sub{
-  font-size:12px;color:#52525b;margin-bottom:32px;text-align:center;
-}
-
-.progress-ring-wrap{
-  position:relative;width:120px;height:120px;margin-bottom:28px;
-}
-.progress-ring-wrap svg{transform:rotate(-90deg)}
-.progress-ring-bg{fill:none;stroke:#18181b;stroke-width:6}
-.progress-ring-fill{
-  fill:none;stroke:url(#ringGrad);stroke-width:6;stroke-linecap:round;
-  stroke-dasharray:339;stroke-dashoffset:339;
-  transition:stroke-dashoffset 0.6s cubic-bezier(0.4,0,0.2,1);
-}
-.progress-pct{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-  font-size:26px;font-weight:700;color:#f4f4f5;letter-spacing:-1px;
-}
-.progress-pct span{font-size:11px;font-weight:400;color:#52525b;letter-spacing:0;}
-
-.progress-bar-wrap{width:100%;margin-bottom:12px}
-.progress-bar-track{
-  width:100%;height:4px;background:#18181b;border-radius:99px;overflow:hidden;
-}
-.progress-bar-fill{
+/* ── PROGRESS ── */
+.ptrack{width:100%;height:2px;background:rgba(255,255,255,0.04);border-radius:99px;overflow:hidden;margin-bottom:10px;position:relative}
+.pfill{
   height:100%;width:0%;border-radius:99px;
-  background:linear-gradient(90deg,#0e7490,#06b6d4,#22d3ee);
-  background-size:200% 100%;
-  animation:barMove 1.5s linear infinite;
-  box-shadow:0 0 10px rgba(6,182,212,0.5);
-  transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+  background:linear-gradient(90deg,#0c4a6e,#0e7490,#06b6d4,#22d3ee);
+  background-size:300% 100%;
+  animation:pfl 2s linear infinite;
+  box-shadow:0 0 15px rgba(6,182,212,.8),0 0 30px rgba(6,182,212,.3);
+  transition:width .75s cubic-bezier(0.4,0,0.2,1);
 }
-@keyframes barMove{
-  0%{background-position:200% 0}
-  100%{background-position:0% 0}
-}
+@keyframes pfl{0%{background-position:200% 0}100%{background-position:0% 0}}
 
-.progress-step{
-  font-size:12px;color:#52525b;text-align:center;
-  height:20px;transition:all 0.3s;
+.pmeta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px}
+.pmsg{font-size:10px;color:#3f3f46;transition:all .4s}
+.ppct{
+  font-size:22px;font-weight:800;letter-spacing:-1px;
+  background:linear-gradient(135deg,#06b6d4,#22d3ee);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-variant-numeric:tabular-nums;line-height:1;
 }
+.ppct span{font-size:10px;font-weight:500;letter-spacing:0}
 
-/* ── Steps indicator ──────────────────────────────────────────────────────── */
-.steps-log{
-  width:100%;margin-top:16px;
-  display:flex;flex-direction:column;gap:6px;
-  max-height:120px;overflow:hidden;
+.slog{
+  flex:1;background:rgba(0,0,0,0.18);
+  border:1px solid rgba(255,255,255,0.035);border-radius:11px;
+  padding:12px 14px;overflow:hidden;display:flex;flex-direction:column;
 }
-.step-item{
-  display:flex;align-items:center;gap:8px;
-  font-size:11px;color:#3f3f46;
-  animation:stepIn 0.3s ease-out both;
-  transition:color 0.3s;
-}
-.step-item.done{color:#71717a}
-.step-item.active{color:#06b6d4}
-.step-dot{
-  width:6px;height:6px;border-radius:50%;background:#27272a;flex-shrink:0;
-  transition:all 0.3s;
-}
-.step-item.done .step-dot{background:#22c55e}
-.step-item.active .step-dot{background:#06b6d4;box-shadow:0 0 6px rgba(6,182,212,0.8);animation:dotPulse 1s ease-in-out infinite}
-@keyframes dotPulse{0%,100%{opacity:1}50%{opacity:0.4}}
-@keyframes stepIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.slog-h{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#1f1f23;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.slog-h::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.03)}
+.slogitems{display:flex;flex-direction:column;gap:7px;overflow:hidden}
+.sit{display:flex;align-items:center;gap:8px;animation:sitn .3s ease both}
+.sdot{width:4px;height:4px;border-radius:50%;flex-shrink:0;transition:all .3s}
+.sit.dn .sdot{background:#22c55e}
+.sit.ac .sdot{background:#06b6d4;box-shadow:0 0 8px rgba(6,182,212,1);animation:dpa 1s ease-in-out infinite}
+.sit.dn{font-size:9px;color:#27272a}
+.sit.ac{font-size:9px;color:#52525b}
+@keyframes dpa{0%,100%{opacity:1}50%{opacity:.2}}
+@keyframes sitn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 
-/* ── Done screen ──────────────────────────────────────────────────────────── */
-.done-icon{
-  width:80px;height:80px;border-radius:50%;
-  background:rgba(34,197,94,0.1);border:2px solid rgba(34,197,94,0.3);
+/* ── DONE ── */
+.dw{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center}
+.dcheck{
+  width:68px;height:68px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px;
-  animation:doneScale 0.6s cubic-bezier(0.16,1,0.3,1) both;
+  margin-bottom:18px;
+  animation:pop .7s cubic-bezier(0.16,1,0.3,1) both;
 }
-.done-icon svg{width:36px;height:36px;stroke:#22c55e;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-@keyframes doneScale{from{scale:0;opacity:0}to{scale:1;opacity:1}}
-.done-title{font-size:22px;font-weight:700;color:#f4f4f5;margin-bottom:8px;text-align:center}
-.done-sub{font-size:13px;color:#52525b;text-align:center;line-height:1.6;max-width:320px;margin-bottom:28px}
+.dcheck.ok{background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.18);box-shadow:0 0 40px rgba(34,197,94,0.15)}
+.dcheck.rm{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12)}
+.dcheck svg{width:28px;height:28px;fill:none;stroke-width:2;stroke-linecap:round}
+.dcheck.ok svg{stroke:#22c55e}
+.dcheck.rm svg{stroke:#f87171}
+@keyframes pop{from{scale:0;opacity:0;rotate:-15deg}to{scale:1;opacity:1;rotate:0deg}}
 
-/* ── Uninstall done ───────────────────────────────────────────────────────── */
-.undone-icon{
-  width:80px;height:80px;border-radius:50%;
-  background:rgba(239,68,68,0.08);border:2px solid rgba(239,68,68,0.2);
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:20px;
-  animation:doneScale 0.6s cubic-bezier(0.16,1,0.3,1) both;
-}
-.undone-icon svg{width:36px;height:36px;stroke:#f87171;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* ── BUTTONS ── */
+.brow{display:flex;gap:7px;justify-content:flex-end;margin-top:auto;padding-top:10px}
+.bcol{display:flex;flex-direction:column;gap:7px;width:100%;margin-top:auto}
 
-/* ── Buttons ──────────────────────────────────────────────────────────────── */
 .btn{
-  border:none;border-radius:12px;padding:0 28px;height:44px;
-  font-size:14px;font-weight:600;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;
-  transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  height:38px;padding:0 20px;border:none;border-radius:9px;
+  font-size:11px;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all .25s cubic-bezier(0.16,1,0.3,1);
   position:relative;overflow:hidden;
 }
 .btn::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,0.1) 0%,transparent 60%);
-  opacity:0;transition:opacity 0.2s;
+  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
+  transition:left .6s;
 }
-.btn:hover::after{opacity:1}
-.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+.btn:hover::after{left:100%}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
 
-.btn-primary{
-  background:linear-gradient(135deg,#0e7490,#06b6d4);color:#fff;
-  box-shadow:0 4px 20px rgba(6,182,212,0.3),0 0 0 1px rgba(6,182,212,0.2);
+.bp{
+  background:linear-gradient(135deg,#0c4a6e,#0e7490 45%,#06b6d4);color:#fff;
+  box-shadow:0 4px 18px rgba(6,182,212,0.28),0 0 0 1px rgba(6,182,212,0.14),inset 0 1px 0 rgba(255,255,255,0.12);
 }
-.btn-primary:hover{
-  transform:translateY(-1px);
-  box-shadow:0 8px 30px rgba(6,182,212,0.4),0 0 0 1px rgba(6,182,212,0.3);
-}
-.btn-primary:active{transform:translateY(0)}
+.bp:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(6,182,212,0.4),0 0 0 1px rgba(6,182,212,0.22),inset 0 1px 0 rgba(255,255,255,0.12)}
+.bp:active{transform:translateY(0)}
+.bg{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);color:#3f3f46}
+.bg:hover{background:rgba(255,255,255,0.06);color:#52525b}
 
-.btn-ghost{
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.08);color:#71717a;
-}
-.btn-ghost:hover{background:rgba(255,255,255,0.07);color:#a1a1aa}
-
-.btn-danger{
-  background:rgba(239,68,68,0.1);
-  border:1px solid rgba(239,68,68,0.2);color:#f87171;
-}
-.btn-danger:hover{background:rgba(239,68,68,0.18)}
-
-.btn-row{display:flex;gap:10px;width:100%;justify-content:flex-end;margin-top:auto;padding-top:16px}
-.btn-row-center{display:flex;gap:10px;flex-direction:column;align-items:center;width:100%}
-
-/* ── Footer ───────────────────────────────────────────────────────────────── */
-.footer{
-  position:absolute;bottom:16px;left:0;right:0;
-  display:flex;justify-content:space-between;align-items:center;
-  padding:0 48px;
-}
-.footer-left{font-size:10px;color:#27272a}
-.footer-right{
-  font-size:10px;color:#27272a;cursor:pointer;
-  text-decoration:underline;text-underline-offset:2px;
-}
-.footer-right:hover{color:#52525b}
-
-/* ── Animations ───────────────────────────────────────────────────────────── */
-@keyframes fadeUp{
-  from{opacity:0;transform:translateY(16px)}
-  to{opacity:1;transform:translateY(0)}
-}
+/* version */
+.vtag{position:absolute;bottom:14px;right:18px;font-size:8px;color:#18181b;letter-spacing:.05em;z-index:10}
 </style>
 </head>
 <body>
 <div class="shell">
-  <div class="drag-bar"></div>
-  <div class="accent-bar"></div>
 
-  <!-- Window controls -->
-  <div class="win-controls">
-    <button class="win-btn minimize" onclick="window.installer.quit()" title="Minimize">–</button>
-    <button class="win-btn close"    onclick="window.installer.quit()" title="Close">✕</button>
-  </div>
-
-  <!-- Particles canvas -->
-  <canvas id="canvas"></canvas>
-
-  <!-- Background effects -->
-  <div class="grid"></div>
-  <div class="glow-cyan"></div>
-  <div class="glow-purple"></div>
-
-  <!-- SVG defs for ring gradient -->
-  <svg width="0" height="0" style="position:absolute">
-    <defs>
-      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%"   stop-color="#0e7490"/>
-        <stop offset="100%" stop-color="#22d3ee"/>
-      </linearGradient>
-    </defs>
-  </svg>
-
-  <div class="content">
-
-    <!-- Logo (always visible) -->
-    <div class="logo-wrap">
-      <div class="logo-icon">
+<!-- ══ INTRO ══════════════════════════════════════════════════════ -->
+<div id="intro">
+  <canvas id="ic"></canvas>
+  <div class="ihex"></div>
+  <div class="iscan"></div>
+  <div class="intro-core">
+    <div class="ringsys">
+      <div class="rg rg1"></div>
+      <div class="rg rg2"></div>
+      <div class="rg rg3"></div>
+      <div class="rg rg4"></div>
+      <div class="ilogo">
         <svg viewBox="0 0 24 24">
-          <line x1="12" y1="2"  x2="12" y2="5"/><rect x="9"  y="5"  width="6" height="7" rx="1"/>
+          <line x1="12" y1="2" x2="12" y2="5"/><rect x="9" y="5" width="6" height="7" rx="1"/>
           <line x1="12" y1="12" x2="12" y2="15"/>
-          <line x1="5"  y1="4"  x2="5"  y2="7"/><rect x="2"  y="7"  width="6" height="5" rx="1"/>
-          <line x1="5"  y1="12" x2="5"  y2="15"/>
-          <line x1="19" y1="6"  x2="19" y2="9"/><rect x="16" y="9"  width="6" height="4" rx="1"/>
+          <line x1="5" y1="4" x2="5" y2="7"/><rect x="2" y="7" width="6" height="5" rx="1"/>
+          <line x1="5" y1="12" x2="5" y2="15"/>
+          <line x1="19" y1="6" x2="19" y2="9"/><rect x="16" y="9" width="6" height="4" rx="1"/>
           <line x1="19" y1="13" x2="19" y2="16"/>
         </svg>
       </div>
-      <div class="logo-name">AxiomPips</div>
-      <div class="logo-tagline">Precision Tools for Smarter Trading</div>
+    </div>
+    <div class="ibrand">AxiomPips</div>
+    <div class="itag">Precision Tools · Professional Trading</div>
+    <div class="iloader">
+      <div class="ibar-bg"><div class="ibar-fill"></div></div>
+      <div class="istat" id="istat">Initializing core systems…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ═══════════════════════════════════════════════════════ -->
+<div class="accent"></div>
+<div class="drag"></div>
+
+<!-- Window controls — perfectly visible -->
+<div class="wc">
+  <button class="wb mn" onclick="window.installer?.quit()" title="Minimize">
+    <svg viewBox="0 0 10 10"><line x1="1" y1="5" x2="9" y2="5"/></svg>
+  </button>
+  <button class="wb cl" onclick="window.installer?.quit()" title="Close">
+    <svg viewBox="0 0 10 10"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
+  </button>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="lgrid"></div>
+    <div class="llogo">
+      <div class="lic">
+        <svg viewBox="0 0 24 24">
+          <line x1="12" y1="2" x2="12" y2="5"/><rect x="9" y="5" width="6" height="7" rx="1"/>
+          <line x1="12" y1="12" x2="12" y2="15"/>
+          <line x1="5" y1="4" x2="5" y2="7"/><rect x="2" y="7" width="6" height="5" rx="1"/>
+          <line x1="5" y1="12" x2="5" y2="15"/>
+          <line x1="19" y1="6" x2="19" y2="9"/><rect x="16" y="9" width="6" height="4" rx="1"/>
+          <line x1="19" y1="13" x2="19" y2="16"/>
+        </svg>
+      </div>
+      <div class="ln">AxiomPips</div>
+      <div class="lt">Desktop Setup · v0.1.0</div>
     </div>
 
-    <div class="divider"></div>
+    <div class="snav" id="snav">
+      <div class="si a" data-i="0"><div class="sd a" id="sd0">1</div><div class="sl">Welcome</div></div>
+      <div class="si" data-i="1"><div class="sd p" id="sd1">2</div><div class="sl">Installing</div></div>
+      <div class="si" data-i="2"><div class="sd p" id="sd2">3</div><div class="sl">Complete</div></div>
+    </div>
 
-    <!-- ── SCREEN 1: Welcome / Existing install ── -->
-    <div class="screen active" id="screen-welcome" style="width:100%;display:flex;flex-direction:column">
+    <div class="lfooter">© 2025 AxiomPips · axiompips.com</div>
+  </div>
 
-      <div id="existing-notice" class="existing-notice">
+  <!-- RIGHT -->
+  <div class="right">
+
+    <!-- Welcome -->
+    <div class="screen on" id="sw">
+      <div class="stitle">Welcome to AxiomPips</div>
+      <div class="ssub">Professional-grade forex calculators and trading tools,<br/>now available as a native Windows desktop experience.</div>
+
+      <div class="en" id="en">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div class="existing-notice-text">
-          <strong id="existing-notice-title">Already Installed</strong>
-          <span id="existing-notice-body">AxiomPips is already installed. Choose an action below.</span>
-        </div>
+        <div><div class="ent" id="ent">Already Installed</div><div class="ens" id="ens">Choose an action below</div></div>
       </div>
-
-      <div id="reinstall-options" class="reinstall-options">
-        <button class="reinstall-btn update" onclick="handleUpdate()">
+      <div class="rops" id="rops">
+        <button class="rb u" onclick="doUpdate()">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           Update to latest version
         </button>
-        <button class="reinstall-btn uninstall" onclick="handleUninstall()">
-          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        <button class="rb x" onclick="doUninstall()">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
           Uninstall AxiomPips
         </button>
       </div>
 
-      <div id="fresh-install-section">
-        <p class="welcome-title">Welcome to AxiomPips</p>
-        <p class="welcome-sub">Professional forex calculators and trading tools, now as a native desktop app.</p>
-
-        <div class="features" style="margin-top:20px">
-          <div class="feature">
-            <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
-            <div class="feature-text"><strong>Instant Launch</strong>No browser needed</div>
+      <div id="fs">
+        <div class="flist">
+          <div class="fi">
+            <div class="fic"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+            <div><div class="ft">Instant Native Launch</div><div class="fs2">No browser — opens in milliseconds from your desktop</div></div>
           </div>
-          <div class="feature">
-            <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <div class="feature-text"><strong>Private & Secure</strong>Your data stays local</div>
+          <div class="fi">
+            <div class="fic"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div><div class="ft">13+ Professional Calculators</div><div class="fs2">Position size, pip value, risk/reward, fibonacci & more</div></div>
           </div>
-          <div class="feature">
-            <div class="feature-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <div class="feature-text"><strong>13+ Calculators</strong>All pro tools included</div>
-          </div>
-          <div class="feature">
-            <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-            <div class="feature-text"><strong>Always Current</strong>Live data via internet</div>
+          <div class="fi">
+            <div class="fic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div><div class="ft">Secure & Private</div><div class="fs2">Your trading data stays on your device, always</div></div>
           </div>
         </div>
-
-        <div style="width:100%;margin-bottom:16px">
-          <p class="path-label">Install Location</p>
-          <div class="path-input" id="install-path-display">Loading…</div>
+        <div class="prow">
+          <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <div class="ptxt" id="pd">Loading…</div>
         </div>
+        <div class="phint">Install location · Windows x64</div>
       </div>
 
-      <div class="btn-row">
-        <button class="btn btn-ghost" onclick="window.installer.quit()">Cancel</button>
-        <button class="btn btn-primary" id="install-btn" onclick="startInstall()">
+      <div class="brow">
+        <button class="btn bg" onclick="window.installer?.quit()">Cancel</button>
+        <button class="btn bp" id="ib" onclick="doInstall()">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Install AxiomPips
         </button>
       </div>
     </div>
 
-    <!-- ── SCREEN 2: Installing ── -->
-    <div class="screen" id="screen-progress" style="width:100%;display:flex;flex-direction:column;align-items:center">
-      <p class="progress-title" id="progress-title">Installing AxiomPips…</p>
-      <p class="progress-sub"  id="progress-sub">Please wait while we set everything up</p>
+    <!-- Progress -->
+    <div class="screen" id="sp">
+      <div class="stitle" id="ptitle">Installing AxiomPips…</div>
+      <div class="ssub">Please wait — preparing your professional trading workspace</div>
+      <div class="ptrack"><div class="pfill" id="pf"></div></div>
+      <div class="pmeta">
+        <div class="pmsg" id="pm">Starting…</div>
+        <div class="ppct"><span id="pn">0</span>%</div>
+      </div>
+      <div class="slog">
+        <div class="slog-h">Installation Log</div>
+        <div class="slogitems" id="sl"></div>
+      </div>
+    </div>
 
-      <div class="progress-ring-wrap">
-        <svg width="120" height="120" viewBox="0 0 120 120">
-          <circle class="progress-ring-bg"   cx="60" cy="60" r="54"/>
-          <circle class="progress-ring-fill" cx="60" cy="60" r="54" id="progress-ring"/>
-        </svg>
-        <div class="progress-pct">
-          <span id="pct-num">0</span>%<span id="pct-label">Installing</span>
+    <!-- Done -->
+    <div class="screen" id="sd">
+      <div class="dw">
+        <div class="dcheck ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="stitle" style="text-align:center">Successfully Installed</div>
+        <div class="ssub" style="text-align:center;margin-bottom:28px">AxiomPips is ready on your desktop.<br/>Your professional trading toolkit is live.</div>
+        <div class="bcol" style="max-width:260px">
+          <button class="btn bp" style="width:100%;justify-content:center" onclick="window.installer?.launchApp()">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Launch AxiomPips
+          </button>
+          <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.quit()">Close Setup</button>
         </div>
       </div>
+    </div>
 
-      <div class="progress-bar-wrap">
-        <div class="progress-bar-track">
-          <div class="progress-bar-fill" id="progress-bar"></div>
+    <!-- Uninstalled -->
+    <div class="screen" id="su">
+      <div class="dw">
+        <div class="dcheck rm"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+        <div class="stitle" style="text-align:center">Uninstalled</div>
+        <div class="ssub" style="text-align:center;margin-bottom:28px">AxiomPips has been removed from your system.<br/>You can reinstall anytime from axiompips.com</div>
+        <div class="bcol" style="max-width:260px">
+          <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.openWebsite()">Visit axiompips.com</button>
+          <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.quit()">Close</button>
         </div>
       </div>
-
-      <p class="progress-step" id="progress-step-text">Preparing…</p>
-
-      <div class="steps-log" id="steps-log"></div>
     </div>
 
-    <!-- ── SCREEN 3: Done ── -->
-    <div class="screen" id="screen-done" style="width:100%;display:flex;flex-direction:column;align-items:center">
-      <div class="done-icon">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <p class="done-title">You're all set!</p>
-      <p class="done-sub">AxiomPips has been installed successfully.<br/>Your precision trading toolkit is ready.</p>
-      <div class="btn-row-center">
-        <button class="btn btn-primary" onclick="window.installer.launchApp()" style="width:100%;justify-content:center">
-          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Launch AxiomPips
-        </button>
-        <button class="btn btn-ghost" onclick="window.installer.quit()" style="width:100%;justify-content:center">
-          Close Installer
-        </button>
-      </div>
-    </div>
-
-    <!-- ── SCREEN 4: Uninstalled ── -->
-    <div class="screen" id="screen-uninstalled" style="width:100%;display:flex;flex-direction:column;align-items:center">
-      <div class="undone-icon">
-        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-      </div>
-      <p class="done-title" style="color:#f4f4f5">Uninstalled</p>
-      <p class="done-sub">AxiomPips has been removed from your computer.<br/>You can always reinstall it later.</p>
-      <div class="btn-row-center">
-        <button class="btn btn-ghost" onclick="window.installer.openWebsite()" style="width:100%;justify-content:center">
-          Visit axiompips.com
-        </button>
-        <button class="btn btn-ghost" onclick="window.installer.quit()" style="width:100%;justify-content:center">
-          Close
-        </button>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-
-  <!-- Footer -->
-  <div class="footer">
-    <span class="footer-left">AxiomPips v0.1.0 · Windows x64</span>
-    <span class="footer-right" onclick="window.installer.openWebsite()">axiompips.com</span>
   </div>
+</div>
+<div class="vtag">Windows x64 · Secure Setup</div>
 </div>
 
 <script>
-// ── Particle system ─────────────────────────────────────────────────────────
-const canvas = document.getElementById('canvas');
-const ctx    = canvas.getContext('2d');
-canvas.width  = 540;
-canvas.height = 680;
-
-const PARTICLES = [];
-const COUNT = 55;
-
-for (let i = 0; i < COUNT; i++) {
-  PARTICLES.push({
-    x:     Math.random() * 540,
-    y:     Math.random() * 680,
-    r:     Math.random() * 1.4 + 0.3,
-    dx:    (Math.random() - 0.5) * 0.3,
-    dy:    (Math.random() - 0.5) * 0.3,
-    alpha: Math.random() * 0.4 + 0.05,
-    hue:   Math.random() > 0.7 ? 187 : 263,
+// ── Intro particles ──────────────────────────────────────────────────────────
+const ic=document.getElementById('ic'),ix=ic.getContext('2d');
+ic.width=900;ic.height=560;
+const pp=Array.from({length:65},()=>({
+  x:Math.random()*900,y:Math.random()*560,
+  dx:(Math.random()-.5)*.28,dy:(Math.random()-.5)*.28,
+  r:Math.random()*1.2+.15,a:Math.random()*.28+.04,
+  h:Math.random()>.62?187:263
+}));
+(function frame(){
+  ix.clearRect(0,0,900,560);
+  pp.forEach(p=>{
+    p.x+=p.dx;p.y+=p.dy;
+    if(p.x<0)p.x=900;if(p.x>900)p.x=0;
+    if(p.y<0)p.y=560;if(p.y>560)p.y=0;
+    ix.beginPath();ix.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ix.fillStyle=`hsla(${p.h},78%,66%,${p.a})`;ix.fill();
   });
-}
-
-function drawParticles() {
-  ctx.clearRect(0, 0, 540, 680);
-  PARTICLES.forEach(p => {
-    p.x += p.dx; p.y += p.dy;
-    if (p.x < 0) p.x = 540;
-    if (p.x > 540) p.x = 0;
-    if (p.y < 0) p.y = 680;
-    if (p.y > 680) p.y = 0;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fillStyle = `hsla(${p.hue}, 80%, 65%, ${p.alpha})`;
-    ctx.fill();
-  });
-
-  // Draw lines between nearby particles
-  for (let i = 0; i < PARTICLES.length; i++) {
-    for (let j = i + 1; j < PARTICLES.length; j++) {
-      const dx   = PARTICLES[i].x - PARTICLES[j].x;
-      const dy   = PARTICLES[i].y - PARTICLES[j].y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < 80) {
-        ctx.beginPath();
-        ctx.moveTo(PARTICLES[i].x, PARTICLES[i].y);
-        ctx.lineTo(PARTICLES[j].x, PARTICLES[j].y);
-        ctx.strokeStyle = `rgba(6,182,212,${0.06 * (1 - dist / 80)})`;
-        ctx.lineWidth   = 0.5;
-        ctx.stroke();
-      }
-    }
+  for(let i=0;i<pp.length;i++)for(let j=i+1;j<pp.length;j++){
+    const dx=pp[i].x-pp[j].x,dy=pp[i].y-pp[j].y,d=Math.sqrt(dx*dx+dy*dy);
+    if(d<72){ix.beginPath();ix.moveTo(pp[i].x,pp[i].y);ix.lineTo(pp[j].x,pp[j].y);
+      ix.strokeStyle=`rgba(6,182,212,${.038*(1-d/72)})`;ix.lineWidth=.4;ix.stroke();}
   }
-  requestAnimationFrame(drawParticles);
-}
-drawParticles();
+  requestAnimationFrame(frame);
+})();
 
-// ── Screen management ────────────────────────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  setTimeout(() => document.getElementById(id)?.classList.add('active'), 50);
+// ── Status cycle ─────────────────────────────────────────────────────────────
+const stts=['Initializing core systems…','Loading trading engine…','Preparing workspace…','Almost ready…'];
+let si2=0;const ise=document.getElementById('istat');
+const sci=setInterval(()=>{si2++;if(si2<stts.length)ise.textContent=stts[si2];else clearInterval(sci)},620);
+
+setTimeout(()=>{
+  const intr=document.getElementById('intro');
+  intr.style.transition='opacity 1.1s cubic-bezier(0.4,0,0.2,1),transform 1.1s cubic-bezier(0.4,0,0.2,1)';
+  intr.style.opacity='0';intr.style.transform='scale(1.025)';
+  setTimeout(()=>{intr.style.display='none';init()},1100);
+},3500);
+
+// ── Nav ──────────────────────────────────────────────────────────────────────
+function setNav(step){
+  document.querySelectorAll('.si').forEach((el,i)=>{
+    const d=document.getElementById('sd'+i);
+    el.classList.remove('a');
+    d.classList.remove('a','p','d');
+    if(i<step){d.classList.add('d');d.textContent='✓'}
+    else if(i===step){el.classList.add('a');d.classList.add('a')}
+    else{d.classList.add('p')}
+  });
+}
+
+function show(id,nav=0){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  requestAnimationFrame(()=>document.getElementById(id)?.classList.add('on'));
+  setNav(nav);
 }
 
 // ── State ────────────────────────────────────────────────────────────────────
-let existingInstall = null;
-let installPath     = '';
-let isUninstalling  = false;
-
-// ── Init ─────────────────────────────────────────────────────────────────────
-async function init() {
-  const existing = await window.installer.checkExisting();
-  existingInstall = existing;
-  installPath     = existing.path;
-
-  document.getElementById('install-path-display').textContent = installPath;
-
-  if (existing.installed) {
-    document.getElementById('existing-notice').classList.add('visible');
-    document.getElementById('existing-notice-title').textContent =
-      `Already Installed  •  v${existing.version || '?'}`;
-    document.getElementById('reinstall-options').classList.add('visible');
-    document.getElementById('fresh-install-section').style.display = 'none';
-    document.getElementById('install-btn').style.display = 'none';
+let edata=null,ipath='',isUn=false;
+async function init(){
+  const d=await window.installer?.checkExisting();
+  edata=d;ipath=d?.path||'C:\\Users\\AppData\\Local\\AxiomPips';
+  document.getElementById('pd').textContent=ipath;
+  if(d?.installed){
+    document.getElementById('en').classList.add('show');
+    document.getElementById('ent').textContent=`Already installed · v${d.version||'?'}`;
+    document.getElementById('rops').classList.add('show');
+    document.getElementById('fs').style.display='none';
+    document.getElementById('ib').style.display='none';
   }
 }
-init();
 
-// ── Progress update ──────────────────────────────────────────────────────────
-const completedSteps = [];
-
-window.installer.onProgress(({ pct, msg }) => {
-  // Ring
-  const circumference = 339;
-  const offset = circumference - (pct / 100) * circumference;
-  document.getElementById('progress-ring').style.strokeDashoffset = offset;
-
-  // Bar
-  document.getElementById('progress-bar').style.width = pct + '%';
-
-  // Percent
-  document.getElementById('pct-num').textContent  = pct;
-  document.getElementById('progress-step-text').textContent = msg;
-
-  // Steps log
-  const log = document.getElementById('steps-log');
-  // Mark previous as done
-  log.querySelectorAll('.step-item.active').forEach(el => {
-    el.classList.remove('active');
-    el.classList.add('done');
-  });
-  // Add new step
-  const item = document.createElement('div');
-  item.className = 'step-item active';
-  item.innerHTML = `<div class="step-dot"></div><span>${msg}</span>`;
-  log.appendChild(item);
-  log.scrollTop = log.scrollHeight;
-
-  if (pct >= 100) {
-    setTimeout(() => {
-      if (isUninstalling) showScreen('screen-uninstalled');
-      else showScreen('screen-done');
-    }, 600);
-  }
+// ── Progress ─────────────────────────────────────────────────────────────────
+window.installer?.onProgress(({pct,msg})=>{
+  document.getElementById('pf').style.width=pct+'%';
+  document.getElementById('pn').textContent=pct;
+  document.getElementById('pm').textContent=msg;
+  const sl=document.getElementById('sl');
+  sl.querySelectorAll('.sit.ac').forEach(e=>{e.classList.remove('ac');e.classList.add('dn')});
+  const it=document.createElement('div');it.className='sit ac';
+  it.innerHTML=`<div class="sdot"></div><span>${msg}</span>`;
+  sl.appendChild(it);sl.scrollTop=sl.scrollHeight;
+  if(pct>=100)setTimeout(()=>show(isUn?'su':'sd',2),850);
 });
 
-// ── Actions ───────────────────────────────────────────────────────────────────
-async function startInstall() {
-  isUninstalling = false;
-  document.getElementById('progress-title').textContent = 'Installing AxiomPips…';
-  document.getElementById('progress-sub').textContent   = 'Setting up your trading toolkit';
-  document.getElementById('pct-label').textContent      = 'Installing';
-  showScreen('screen-progress');
-  await window.installer.startInstall(installPath);
+// ── Actions ──────────────────────────────────────────────────────────────────
+async function doInstall(){
+  isUn=false;document.getElementById('ptitle').textContent='Installing AxiomPips…';
+  show('sp',1);await window.installer?.startInstall(ipath);
 }
-
-async function handleUpdate() {
-  isUninstalling = false;
-  document.getElementById('progress-title').textContent = 'Updating AxiomPips…';
-  document.getElementById('progress-sub').textContent   = 'Installing the latest version';
-  document.getElementById('pct-label').textContent      = 'Updating';
-  showScreen('screen-progress');
-  await window.installer.startInstall(installPath);
+async function doUpdate(){
+  isUn=false;document.getElementById('ptitle').textContent='Updating AxiomPips…';
+  show('sp',1);await window.installer?.startInstall(ipath);
 }
-
-async function handleUninstall() {
-  isUninstalling = true;
-  document.getElementById('progress-title').textContent = 'Uninstalling AxiomPips…';
-  document.getElementById('progress-sub').textContent   = 'Removing all files and shortcuts';
-  document.getElementById('pct-label').textContent      = 'Removing';
-  showScreen('screen-progress');
-  await window.installer.startUninstall(existingInstall?.path || installPath);
+async function doUninstall(){
+  isUn=true;document.getElementById('ptitle').textContent='Uninstalling AxiomPips…';
+  show('sp',1);await window.installer?.startUninstall(edata?.path||ipath);
 }
 </script>
 </body>

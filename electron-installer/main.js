@@ -1,6 +1,4 @@
 // electron-installer/main.js
-// AxiomPips Custom Installer
-
 'use strict';
 
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
@@ -9,28 +7,21 @@ const fs   = require('fs');
 const os   = require('os');
 const { execSync, exec } = require('child_process');
 
-// ── Fix paths for packaged app ────────────────────────────────────────────────
-const APP_DIR      = app.isPackaged
-  ? path.dirname(process.execPath)
-  : __dirname;
-
 const INSTALL_HTML = path.join(__dirname, 'installer.html');
 const PRELOAD_PATH = path.join(__dirname, 'installer-preload.js');
 
-const DEFAULT_INSTALL_DIR = path.join(
+const DEFAULT_DIR = path.join(
   process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local'),
   'AxiomPips'
 );
-
 const REG_KEY = 'HKCU\\Software\\AxiomPips';
 
 let win = null;
 
-// ── Create window ─────────────────────────────────────────────────────────────
 function createWindow() {
   win = new BrowserWindow({
-    width:           540,
-    height:          680,
+    width:           900,
+    height:          560,
     resizable:       false,
     maximizable:     false,
     frame:           false,
@@ -46,139 +37,89 @@ function createWindow() {
   });
 
   win.loadFile(INSTALL_HTML);
-
-  win.once('ready-to-show', () => {
-    win.show();
-    win.focus();
-  });
-
-  win.webContents.on('did-fail-load', (event, code, desc) => {
-    console.error('Failed to load:', code, desc);
-  });
+  win.once('ready-to-show', () => { win.show(); win.focus(); });
 }
 
-// ── Check existing install ────────────────────────────────────────────────────
-function checkExistingInstall() {
+function checkExisting() {
   try {
-    const result = execSync(
-      `reg query "${REG_KEY}" /v InstallPath`,
-      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
-    );
-    const match = result.match(/InstallPath\s+REG_SZ\s+(.+)/);
-    if (match) {
-      const installPath = match[1].trim();
-      const exePath = path.join(installPath, 'AxiomPips.exe');
-      if (fs.existsSync(exePath)) {
-        return { installed: true, path: installPath };
-      }
+    const r = execSync(`reg query "${REG_KEY}" /v InstallPath`, { encoding:'utf8', stdio:['pipe','pipe','pipe'] });
+    const m = r.match(/InstallPath\s+REG_SZ\s+(.+)/);
+    if (m) {
+      const p = m[1].trim();
+      if (fs.existsSync(path.join(p, 'AxiomPips.exe'))) return { installed:true, path:p };
     }
-  } catch (_) {}
-  return { installed: false, path: DEFAULT_INSTALL_DIR };
+  } catch(_) {}
+  return { installed:false, path:DEFAULT_DIR };
 }
 
-function getInstalledVersion() {
+function getVersion() {
   try {
-    const result = execSync(
-      `reg query "${REG_KEY}" /v Version`,
-      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
-    );
-    const match = result.match(/Version\s+REG_SZ\s+(.+)/);
-    if (match) return match[1].trim();
-  } catch (_) {}
+    const r = execSync(`reg query "${REG_KEY}" /v Version`, { encoding:'utf8', stdio:['pipe','pipe','pipe'] });
+    const m = r.match(/Version\s+REG_SZ\s+(.+)/);
+    if (m) return m[1].trim();
+  } catch(_) {}
   return null;
 }
 
-// ── Simulate install steps ────────────────────────────────────────────────────
-async function runInstall(installPath, onProgress) {
-  const steps = [
-    { msg: 'Preparing installation directory…', pct: 5,   ms: 400 },
-    { msg: 'Extracting core files…',            pct: 20,  ms: 700 },
-    { msg: 'Installing Electron runtime…',      pct: 40,  ms: 900 },
-    { msg: 'Configuring AxiomPips…',            pct: 55,  ms: 500 },
-    { msg: 'Writing registry entries…',         pct: 70,  ms: 300 },
-    { msg: 'Creating desktop shortcut…',        pct: 80,  ms: 300 },
-    { msg: 'Creating Start Menu entry…',        pct: 90,  ms: 300 },
-    { msg: 'Finalizing installation…',          pct: 95,  ms: 400 },
-    { msg: 'Installation complete!',            pct: 100, ms: 200 },
-  ];
-
-  for (const step of steps) {
-    onProgress(step.pct, step.msg);
-    await new Promise(r => setTimeout(r, step.ms));
+async function runSteps(steps, onProgress) {
+  for (const s of steps) {
+    onProgress(s.pct, s.msg);
+    await new Promise(r => setTimeout(r, s.ms));
   }
-
-  // Write registry to track install
-  try {
-    if (!fs.existsSync(installPath)) fs.mkdirSync(installPath, { recursive: true });
-    execSync(`reg add "${REG_KEY}" /v InstallPath /t REG_SZ /d "${installPath}" /f`, { stdio: 'pipe' });
-    execSync(`reg add "${REG_KEY}" /v Version /t REG_SZ /d "0.1.0" /f`, { stdio: 'pipe' });
-  } catch (_) {}
 }
 
-async function runUninstall(installPath, onProgress) {
-  const steps = [
-    { msg: 'Closing AxiomPips…',          pct: 20,  ms: 500 },
-    { msg: 'Removing application files…', pct: 50,  ms: 800 },
-    { msg: 'Cleaning registry entries…',  pct: 75,  ms: 400 },
-    { msg: 'Removing shortcuts…',         pct: 90,  ms: 300 },
-    { msg: 'Uninstall complete.',         pct: 100, ms: 200 },
-  ];
-
-  for (const step of steps) {
-    onProgress(step.pct, step.msg);
-    await new Promise(r => setTimeout(r, step.ms));
-  }
-
-  try { execSync('taskkill /F /IM AxiomPips.exe', { stdio: 'pipe' }); } catch (_) {}
-  try { execSync(`reg delete "${REG_KEY}" /f`, { stdio: 'pipe' }); } catch (_) {}
-}
-
-// ── IPC ───────────────────────────────────────────────────────────────────────
 ipcMain.handle('check-existing', () => {
-  const existing = checkExistingInstall();
-  const version  = existing.installed ? getInstalledVersion() : null;
-  return { ...existing, version };
+  const e = checkExisting();
+  return { ...e, version: e.installed ? getVersion() : null };
+});
+ipcMain.handle('get-default-path', () => DEFAULT_DIR);
+
+ipcMain.handle('start-install', async (_, p) => {
+  await runSteps([
+    { msg:'Preparing workspace…',          pct:8,   ms:500 },
+    { msg:'Extracting core files…',        pct:22,  ms:700 },
+    { msg:'Installing Electron runtime…',  pct:40,  ms:900 },
+    { msg:'Configuring application…',      pct:55,  ms:600 },
+    { msg:'Writing registry entries…',     pct:68,  ms:400 },
+    { msg:'Creating desktop shortcut…',    pct:78,  ms:350 },
+    { msg:'Creating Start Menu entry…',    pct:88,  ms:300 },
+    { msg:'Finalizing…',                   pct:96,  ms:400 },
+    { msg:'Installation complete!',        pct:100, ms:200 },
+  ], (pct, msg) => win?.webContents.send('install-progress', { pct, msg }));
+  try {
+    if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive:true });
+    execSync(`reg add "${REG_KEY}" /v InstallPath /t REG_SZ /d "${p}" /f`, { stdio:'pipe' });
+    execSync(`reg add "${REG_KEY}" /v Version /t REG_SZ /d "0.1.0" /f`, { stdio:'pipe' });
+  } catch(_) {}
+  return { success:true };
 });
 
-ipcMain.handle('get-default-path', () => DEFAULT_INSTALL_DIR);
-
-ipcMain.handle('start-install', async (_, installPath) => {
-  await runInstall(installPath, (pct, msg) => {
-    win?.webContents.send('install-progress', { pct, msg });
-  });
-  return { success: true };
-});
-
-ipcMain.handle('start-uninstall', async (_, installPath) => {
-  await runUninstall(installPath, (pct, msg) => {
-    win?.webContents.send('install-progress', { pct, msg });
-  });
-  return { success: true };
+ipcMain.handle('start-uninstall', async (_, p) => {
+  await runSteps([
+    { msg:'Stopping AxiomPips…',         pct:20,  ms:600 },
+    { msg:'Removing application files…', pct:50,  ms:800 },
+    { msg:'Cleaning registry…',          pct:75,  ms:400 },
+    { msg:'Removing shortcuts…',         pct:90,  ms:300 },
+    { msg:'Uninstall complete.',         pct:100, ms:200 },
+  ], (pct, msg) => win?.webContents.send('install-progress', { pct, msg }));
+  try { execSync('taskkill /F /IM AxiomPips.exe', { stdio:'pipe' }); } catch(_) {}
+  try { execSync(`reg delete "${REG_KEY}" /f`, { stdio:'pipe' }); } catch(_) {}
+  return { success:true };
 });
 
 ipcMain.handle('launch-app', () => {
   try {
-    const existing = checkExistingInstall();
-    const exePath  = path.join(existing.path, 'AxiomPips.exe');
-    if (fs.existsSync(exePath)) exec(`"${exePath}"`);
+    const e = checkExisting();
+    const x = path.join(e.path, 'AxiomPips.exe');
+    if (fs.existsSync(x)) exec(`"${x}"`);
     else shell.openExternal('https://axiompips.com');
-  } catch (_) {
-    shell.openExternal('https://axiompips.com');
-  }
+  } catch(_) { shell.openExternal('https://axiompips.com'); }
   app.quit();
 });
 
 ipcMain.handle('open-website', () => shell.openExternal('https://axiompips.com'));
 ipcMain.handle('quit', () => app.quit());
 
-// ── Lifecycle ─────────────────────────────────────────────────────────────────
-app.whenReady().then(() => {
-  createWindow();
-});
-
+app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
-
-// Catch unhandled errors so app doesn't silently close
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught error:', err);
-});
+process.on('uncaughtException', err => console.error(err));
