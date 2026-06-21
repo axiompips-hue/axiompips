@@ -1,14 +1,49 @@
 {
-  "name": "axiompips-installer",
+  "name": "axiompips",
   "version": "0.1.0",
-  "description": "AxiomPips Desktop Installer",
-  "main": "electron-installer/main.js",
   "private": true,
   "scripts": {
-    "build:installer": "electron-builder --config electron-installer/installer-builder.yml --win"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.91.1",
+    "decimal.js-light": "^2.5.1",
+    "firebase": "^12.9.0",
+    "lucide-react": "^0.563.0",
+    "next": "14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^6.7.0"
   },
   "devDependencies": {
-    "electron": "^33.4.0",
-    "electron-builder": "^25.1.8"
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.0.1",
+    "@types/node": "^20.16.11",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "@vitest/coverage-v8": "^2.1.9",
+    "autoprefixer": "^10.4.23",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.15",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.5.6",
+    "prettier": "^3.3.3",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
   }
 }
