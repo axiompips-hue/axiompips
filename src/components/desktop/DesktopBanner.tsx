@@ -69,8 +69,14 @@ export function DesktopBanner({
     setTimeout(() => { setVisible(false); setLeaving(false); }, 350);
   }, []);
 
+  // ── Trigger direct download — stays on axiompips.com, no new tab ─────────
   const handleDownload = useCallback(() => {
-    window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = 'AxiomPips-Setup.exe';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     dismiss();
   }, [downloadUrl, dismiss]);
 

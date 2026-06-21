@@ -114,7 +114,7 @@ export default function RootLayout({
           <FeedbackButton />
           <GuideTour />
           <DesktopBanner
-            downloadUrl="https://github.com/axiompips-hue/axiompips/releases/download/v0.1.0/AxiomPips-Setup-0.1.0.exe"
+            downloadUrl="https://github.com/axiompips-hue/axiompips/releases/download/v0.4.8/AxiomPips-Setup.exe"
             delay={3000}
           />
         </ToastProvider>
