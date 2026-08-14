@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - "electron-installer/**"
+      - ".github/workflows/build-desktop.yml"
   workflow_dispatch:   # always available for manual runs
   release:
     types:
