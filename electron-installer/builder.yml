@@ -2,6 +2,13 @@ appId: com.axiompips.desktop
 productName: AxiomPips
 copyright: "Copyright © 2025 AxiomPips"
 
+# Override the main entry point for this specific build.
+# package.json "main" points to main.js (the installer entry), but the
+# desktop wrapper entry point is electron/main.js. extraMetadata patches
+# package.json inside the asar at build time without changing the file on disk.
+extraMetadata:
+  main: electron/main.js
+
 directories:
   buildResources: electron/assets
   output: dist-app
