@@ -3,7 +3,7 @@ name: Build Desktop App
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - "electron-installer/**"
   workflow_dispatch:   # always available for manual runs
