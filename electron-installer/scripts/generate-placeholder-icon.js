@@ -82,7 +82,7 @@ const assetsDir = path.resolve(__dirname, '..', 'electron', 'assets');
 if (!fs.existsSync(assetsDir)) fs.mkdirSync(assetsDir, { recursive: true });
 
 // AxiomPips dark background: #0d0e11 = rgb(13, 14, 17)
-const placeholder = makePNG(64, 64, 0x0d, 0x0e, 0x11);
+const placeholder = makePNG(256, 256, 0x0d, 0x0e, 0x11);
 
 let wrote = 0;
 
@@ -97,7 +97,7 @@ function writeIfAbsent(filePath, data, label) {
 }
 
 console.log('\nAxiomPips — generating placeholder icons…\n');
-writeIfAbsent(path.join(assetsDir, 'icon.png'), placeholder, 'icon.png (64×64 dark)');
+writeIfAbsent(path.join(assetsDir, 'icon.png'), placeholder, 'icon.png (256×256 dark)');
 writeIfAbsent(path.join(assetsDir, 'icon.ico'), placeholder, 'icon.ico  (PNG bytes — electron-builder converts on Windows)');
 
 if (wrote > 0) {
