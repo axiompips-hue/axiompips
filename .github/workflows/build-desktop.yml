@@ -1,0 +1,80 @@
+name: Build Desktop App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "electron-installer/**"
+  workflow_dispatch:   # always available for manual runs
+  release:
+    types:
+      - published
+
+jobs:
+  build-windows:
+    name: Build Windows EXEs
+    runs-on: windows-latest
+
+    defaults:
+      run:
+        working-directory: electron-installer
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js setup ───────────────────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ── 3. Install dependencies ────────────────────────────────────────────
+      - name: Install dependencies
+        run: npm install
+
+      # ── 4. Generate placeholder icons (if real icons not present) ──────────
+      #
+      # This ensures the build never fails due to a missing icon.png.
+      # If you've already committed real icons, the script skips them.
+      - name: Generate placeholder icons (if real icons not present)
+        run: node scripts/generate-placeholder-icon.js
+
+      # ── 5. Build Stage 1 — AxiomPips.exe (the actual wrapper app) ─────────
+      #
+      # Uses builder.yml (target: dir) → output: dist-app/win-unpacked/
+      - name: Build app (AxiomPips.exe)
+        run: npm run build:app
+
+      # ── 6. Build Stage 2 — AxiomPipsSetup.exe (the custom installer) ──────
+      #
+      # Uses installer-builder.yml. Bundles dist-app/win-unpacked/ via
+      # extraResources so the installer can copy AxiomPips.exe at install time.
+      - name: Build installer (AxiomPipsSetup.exe)
+        run: npm run build:installer
+
+      # ── 7. Upload installer as workflow artifact ───────────────────────────
+      #
+      # Available for download from the Actions run page on every build,
+      # regardless of whether this is a release.
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AxiomPipsSetup
+          path: electron-installer/dist-installer/AxiomPipsSetup.exe
+          if-no-files-found: error
+          retention-days: 30
+
+      # ── 8. Attach to GitHub Release (release builds only) ─────────────────
+      #
+      # Runs only when the workflow was triggered by a published release event.
+      - name: Upload to GitHub Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            electron-installer/dist-installer/AxiomPipsSetup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

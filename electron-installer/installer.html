@@ -4,452 +4,378 @@
 <meta charset="UTF-8"/>
 <title>AxiomPips Setup</title>
 <style>
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-html,body{
-  width:900px;height:560px;overflow:hidden;background:transparent;
-  font-family:-apple-system,'SF Pro Display','Segoe UI',system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;user-select:none;-webkit-app-region:no-drag;
+/* ── Reset & base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --c-bg:       #04040a;
+  --c-left:     #070b17;
+  --c-right:    #060710;
+  --c-border:   rgba(255,255,255,0.04);
+  --c-accent:   #06b6d4;
+  --c-accent2:  #818cf8;
+  --c-success:  #22c55e;
+  --c-danger:   #ef4444;
+  --c-warn:     #fbbf24;
+  --c-text:     #e2e2ec;
+  --c-muted:    #70708a;
+  --c-faint:    #27272a;
+  --c-deeper:   #1f1f23;
+  --c-void:     #18181b;
+  --ease:       cubic-bezier(0.16, 1, 0.3, 1);
+}
+html, body {
+  width: 900px; height: 560px; overflow: hidden; background: transparent;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased; user-select: none;
+  -webkit-app-region: no-drag;
 }
 
-/* ══════════════════════════════════════
-   SHELL
-══════════════════════════════════════ */
-.shell{
-  width:900px;height:560px;position:relative;overflow:hidden;
-  background:#04040a;border-radius:20px;
-  border:1px solid rgba(255,255,255,0.06);
+/* ── Shell ────────────────────────────────────────────────────────────── */
+.shell {
+  width: 900px; height: 560px; position: relative; overflow: hidden;
+  background: var(--c-bg); border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.06);
   box-shadow:
     0 0 0 1px rgba(6,182,212,0.04),
     0 80px 240px rgba(0,0,0,0.98),
     inset 0 1px 0 rgba(255,255,255,0.025);
 }
 
-/* ══════════════════════════════════════
-   INTRO OVERLAY
-══════════════════════════════════════ */
-#intro{
-  position:absolute;inset:0;z-index:9000;border-radius:20px;
-  background:radial-gradient(ellipse at 40% 40%,#080d1a 0%,#030305 60%,#020204 100%);
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;
+/* ── Intro overlay ────────────────────────────────────────────────────── */
+#intro {
+  position: absolute; inset: 0; z-index: 9000; border-radius: 20px;
+  background: radial-gradient(ellipse at 40% 40%, #080d1a 0%, #030305 60%, #020204 100%);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
-#ic{position:absolute;inset:0;border-radius:20px}
+#ic { position: absolute; inset: 0; border-radius: 20px; }
+.ihex {
+  position: absolute; inset: 0; border-radius: 20px;
+  background-image: radial-gradient(circle, rgba(6,182,212,0.04) 1px, transparent 1px);
+  background-size: 30px 30px; animation: hexPulse 6s ease-in-out infinite;
+}
+@keyframes hexPulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+.iscan {
+  position: absolute; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(6,182,212,0.5), rgba(139,92,246,0.4), rgba(6,182,212,0.5), transparent);
+  box-shadow: 0 0 15px rgba(6,182,212,0.4), 0 0 40px rgba(6,182,212,0.15);
+  animation: iscan 4s linear infinite; opacity: 0;
+}
+@keyframes iscan { 0% { top: -2px; opacity: 0; } 5% { opacity: 1; } 95% { opacity: .8; } 100% { top: 562px; opacity: 0; } }
+.intro-core { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+.ringsys { position: relative; width: 180px; height: 180px; margin-bottom: 44px; }
+.rg { position: absolute; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid transparent; }
+.rg1 { width: 180px; height: 180px; border-color: rgba(6,182,212,0.06); animation: ri 1s var(--ease) 0.0s both; }
+.rg2 { width: 148px; height: 148px; border-color: rgba(6,182,212,0.12); animation: ri 1s var(--ease) 0.08s both, rCW 30s linear infinite; }
+.rg2::before, .rg2::after {
+  content: ''; position: absolute; width: 7px; height: 7px; border-radius: 50%;
+  background: #06b6d4; box-shadow: 0 0 12px rgba(6,182,212,1), 0 0 30px rgba(6,182,212,0.6);
+  left: 50%; transform: translateX(-50%);
+}
+.rg2::before { top: -3.5px; }
+.rg2::after { bottom: -3.5px; background: #818cf8; box-shadow: 0 0 12px rgba(139,92,246,1), 0 0 30px rgba(139,92,246,0.6); }
+.rg3 { width: 116px; height: 116px; border-color: rgba(139,92,246,0.12); animation: ri 1s var(--ease) 0.16s both, rCCW 20s linear infinite; }
+.rg3::before {
+  content: ''; position: absolute; width: 5px; height: 5px; border-radius: 50%;
+  background: #818cf8; box-shadow: 0 0 10px rgba(139,92,246,1); right: -2.5px; top: 50%; transform: translateY(-50%);
+}
+.rg4 { width: 88px; height: 88px; border-color: rgba(6,182,212,0.08); animation: ri 1s var(--ease) 0.24s both, rCW 15s linear infinite; }
+.ilogo {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 72px; height: 72px; border-radius: 20px;
+  background: linear-gradient(135deg, #0c4a6e 0%, #0e7490 45%, #06b6d4 100%);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(6,182,212,0.5), 0 0 60px rgba(6,182,212,0.6), 0 0 120px rgba(6,182,212,0.25), 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.25);
+  animation: ri 1s var(--ease) 0.32s both, ilogopulse 3s ease-in-out infinite;
+}
+.ilogo::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 55%); }
+.ilogo::after {
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  animation: sweep 3s ease-in-out 2s infinite;
+}
+@keyframes sweep { 0% { left: -100%; } 100% { left: 200%; } }
+.ilogo svg { width: 34px; height: 34px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
+@keyframes ri { from { opacity: 0; scale: .3; } to { opacity: 1; scale: 1; } }
+@keyframes rCW  { to { rotate:  360deg; } }
+@keyframes rCCW { to { rotate: -360deg; } }
+@keyframes ilogopulse {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(6,182,212,0.5), 0 0 60px rgba(6,182,212,0.6), 0 0 120px rgba(6,182,212,0.25), 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.25); }
+  50%       { box-shadow: 0 0 0 1px rgba(6,182,212,0.7), 0 0 90px rgba(6,182,212,0.8), 0 0 180px rgba(6,182,212,0.35), 0 20px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.25); }
+}
+.ibrand {
+  font-size: 40px; font-weight: 800; letter-spacing: -2px;
+  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 50%, #ffffff 100%); background-size: 200%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: ri .9s var(--ease) .6s both, bshim 5s linear 1.5s infinite; margin-bottom: 8px;
+}
+.itag { font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: rgba(6,182,212,0.55); margin-bottom: 48px; animation: ri .9s var(--ease) .75s both; }
+@keyframes bshim { 0% { background-position: 0%; } 100% { background-position: 200%; } }
+.iloader { width: 260px; display: flex; flex-direction: column; align-items: center; gap: 12px; animation: ri .5s ease 1s both; }
+.ibar-bg { width: 100%; height: 1px; background: rgba(255,255,255,0.05); border-radius: 99px; overflow: hidden; }
+.ibar-fill { height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, #0e7490, #06b6d4, #22d3ee); box-shadow: 0 0 15px rgba(6,182,212,1); animation: ibarfill 2s cubic-bezier(.4,0,.2,1) 1.1s forwards; }
+@keyframes ibarfill { 0% { width: 0%; } 55% { width: 70%; } 100% { width: 100%; } }
+.istat { font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,0.15); height: 12px; transition: all .4s; }
 
-/* Intro hex grid */
-.ihex{
-  position:absolute;inset:0;border-radius:20px;
-  background-image:radial-gradient(circle,rgba(6,182,212,0.04) 1px,transparent 1px);
-  background-size:30px 30px;
-  animation:hexPulse 6s ease-in-out infinite;
+/* ── Window controls ──────────────────────────────────────────────────── */
+.wc {
+  position: absolute; top: 0; right: 0; z-index: 8000;
+  display: flex; -webkit-app-region: no-drag;
+  border-bottom-left-radius: 10px; overflow: hidden;
 }
-@keyframes hexPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.wb {
+  width: 46px; height: 36px; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0); transition: background .15s; position: relative;
+}
+.wb:hover { background: rgba(255,255,255,0.05); }
+.wb.cl:hover { background: rgba(196,43,28,0.85); }
+.wb svg { width: 10px; height: 10px; stroke: rgba(255,255,255,0.35); fill: none; stroke-width: 1.5; stroke-linecap: round; transition: stroke .15s; pointer-events: none; }
+.wb:hover svg { stroke: rgba(255,255,255,0.9); }
+.wb.cl:hover svg { stroke: #fff; }
+.wb + .wb::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 1px; background: rgba(255,255,255,0.05); }
 
-/* Intro scan */
-.iscan{
-  position:absolute;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent,rgba(6,182,212,0.5),rgba(139,92,246,0.4),rgba(6,182,212,0.5),transparent);
-  box-shadow:0 0 15px rgba(6,182,212,0.4),0 0 40px rgba(6,182,212,0.15);
-  animation:iscan 4s linear infinite;opacity:0;
-}
-@keyframes iscan{0%{top:-2px;opacity:0}5%{opacity:1}95%{opacity:.8}100%{top:562px;opacity:0}}
+/* ── Drag region ──────────────────────────────────────────────────────── */
+.drag { position: absolute; top: 0; left: 0; right: 92px; height: 40px; -webkit-app-region: drag; z-index: 7000; }
 
-.intro-core{position:relative;z-index:10;display:flex;flex-direction:column;align-items:center}
+/* ── Top accent bar ───────────────────────────────────────────────────── */
+.accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 30; border-radius: 20px 20px 0 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(6,182,212,0) 8%, rgba(6,182,212,.9) 25%, rgba(139,92,246,.7) 50%, rgba(6,182,212,.9) 75%, rgba(6,182,212,0) 92%, transparent 100%);
+  background-size: 300% 100%; animation: acf 5s linear infinite;
+  box-shadow: 0 0 30px rgba(6,182,212,.35), 0 0 80px rgba(6,182,212,.1);
+}
+@keyframes acf { 0% { background-position: 100% 0; } 100% { background-position: -200% 0; } }
 
-/* Ring system */
-.ringsys{position:relative;width:180px;height:180px;margin-bottom:44px}
-.rg{position:absolute;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);border:1px solid transparent}
-.rg1{
-  width:180px;height:180px;border-color:rgba(6,182,212,0.06);
-  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.0s both;
-}
-.rg2{
-  width:148px;height:148px;border-color:rgba(6,182,212,0.12);
-  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.08s both,rCW 30s linear infinite;
-}
-.rg2::before,.rg2::after{
-  content:'';position:absolute;width:7px;height:7px;border-radius:50%;
-  background:#06b6d4;box-shadow:0 0 12px rgba(6,182,212,1),0 0 30px rgba(6,182,212,0.6);
-  left:50%;transform:translateX(-50%);
-}
-.rg2::before{top:-3.5px}
-.rg2::after{bottom:-3.5px;background:#818cf8;box-shadow:0 0 12px rgba(139,92,246,1),0 0 30px rgba(139,92,246,0.6)}
-.rg3{
-  width:116px;height:116px;border-color:rgba(139,92,246,0.12);
-  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.16s both,rCCW 20s linear infinite;
-}
-.rg3::before{
-  content:'';position:absolute;width:5px;height:5px;border-radius:50%;
-  background:#818cf8;box-shadow:0 0 10px rgba(139,92,246,1);
-  right:-2.5px;top:50%;transform:translateY(-50%);
-}
-.rg4{
-  width:88px;height:88px;border-color:rgba(6,182,212,0.08);
-  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.24s both,rCW 15s linear infinite;
-}
+/* ── Layout grid ──────────────────────────────────────────────────────── */
+.layout { position: relative; z-index: 10; display: grid; grid-template-columns: 280px 1fr; height: 100%; }
 
-.ilogo{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:72px;height:72px;border-radius:20px;
-  background:linear-gradient(135deg,#0c4a6e 0%,#0e7490 45%,#06b6d4 100%);
-  display:flex;align-items:center;justify-content:center;overflow:hidden;
-  box-shadow:
-    0 0 0 1px rgba(6,182,212,0.5),
-    0 0 60px rgba(6,182,212,0.6),
-    0 0 120px rgba(6,182,212,0.25),
-    0 20px 60px rgba(0,0,0,0.8),
-    inset 0 1px 0 rgba(255,255,255,0.25);
-  animation:ri 1s cubic-bezier(0.16,1,0.3,1) 0.32s both,ilogopulse 3s ease-in-out infinite;
+/* ── Left panel ───────────────────────────────────────────────────────── */
+.left {
+  position: relative; overflow: hidden;
+  background: linear-gradient(160deg, var(--c-left) 0%, #040508 100%);
+  border-right: 1px solid var(--c-border);
+  display: flex; flex-direction: column; padding: 44px 32px 28px;
 }
-.ilogo::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,0.22) 0%,transparent 55%);
+.left::before {
+  content: ''; position: absolute; top: -120px; left: -80px; width: 360px; height: 360px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(6,182,212,0.09) 0%, transparent 65%);
+  animation: lgf 9s ease-in-out infinite; pointer-events: none;
 }
-/* sweep shimmer */
-.ilogo::after{
-  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
-  animation:sweep 3s ease-in-out 2s infinite;
+.left::after {
+  content: ''; position: absolute; bottom: -100px; right: -60px; width: 280px; height: 280px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.07) 0%, transparent 65%); pointer-events: none;
 }
-@keyframes sweep{0%{left:-100%}100%{left:200%}}
-.ilogo svg{width:34px;height:34px;stroke:#fff;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}
-
-@keyframes ri{from{opacity:0;scale:.3}to{opacity:1;scale:1}}
-@keyframes rCW{to{rotate:360deg}}
-@keyframes rCCW{to{rotate:-360deg}}
-@keyframes ilogopulse{
-  0%,100%{box-shadow:0 0 0 1px rgba(6,182,212,0.5),0 0 60px rgba(6,182,212,0.6),0 0 120px rgba(6,182,212,0.25),0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.25)}
-  50%{box-shadow:0 0 0 1px rgba(6,182,212,0.7),0 0 90px rgba(6,182,212,0.8),0 0 180px rgba(6,182,212,0.35),0 20px 60px rgba(0,0,0,0.8),inset 0 1px 0 rgba(255,255,255,0.25)}
+@keyframes lgf { 0%, 100% { opacity: .5; transform: translate(0,0); } 50% { opacity: 1; transform: translate(12px,18px); } }
+.lgrid {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(6,182,212,0.022) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.022) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 120% 120% at 50% 40%, black 20%, transparent 100%);
 }
-
-.ibrand{
-  font-size:40px;font-weight:800;letter-spacing:-2px;
-  background:linear-gradient(135deg,#ffffff 0%,#94a3b8 50%,#ffffff 100%);
-  background-size:200%;
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:ri .9s cubic-bezier(0.16,1,0.3,1) .6s both,bshim 5s linear 1.5s infinite;
-  margin-bottom:8px;
+.llogo { position: relative; z-index: 2; margin-bottom: auto; }
+.lic {
+  width: 58px; height: 58px; border-radius: 16px;
+  background: linear-gradient(135deg, #0c4a6e, #0e7490 50%, #06b6d4);
+  display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; margin-bottom: 20px;
+  box-shadow: 0 0 0 1px rgba(6,182,212,0.28), 0 0 35px rgba(6,182,212,0.32), 0 8px 28px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.18);
+  animation: licf 4.5s ease-in-out infinite;
 }
-.itag{
-  font-size:10px;letter-spacing:.28em;text-transform:uppercase;
-  color:rgba(6,182,212,0.55);margin-bottom:48px;
-  animation:ri .9s cubic-bezier(0.16,1,0.3,1) .75s both;
+.lic::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, transparent 55%); }
+.lic::after {
+  content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+  animation: sweep 4s ease-in-out 1s infinite;
 }
-@keyframes bshim{0%{background-position:0%}100%{background-position:200%}}
-
-.iloader{width:260px;display:flex;flex-direction:column;align-items:center;gap:12px;animation:ri .5s ease 1s both}
-.ibar-bg{width:100%;height:1px;background:rgba(255,255,255,0.05);border-radius:99px;overflow:hidden}
-.ibar-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#0e7490,#06b6d4,#22d3ee);box-shadow:0 0 15px rgba(6,182,212,1);animation:ibarfill 2s cubic-bezier(.4,0,.2,1) 1.1s forwards}
-@keyframes ibarfill{0%{width:0%}55%{width:70%}100%{width:100%}}
-.istat{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,0.15);height:12px;transition:all .4s}
-
-/* ══════════════════════════════════════
-   WINDOW CONTROLS — crystal clear
-══════════════════════════════════════ */
-.wc{
-  position:absolute;top:0;right:0;z-index:8000;
-  display:flex;-webkit-app-region:no-drag;
-  border-bottom-left-radius:10px;overflow:hidden;
+.lic svg { width: 26px; height: 26px; stroke: #fff; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; position: relative; z-index: 1; }
+@keyframes licf {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(6,182,212,0.28), 0 0 35px rgba(6,182,212,0.32), 0 8px 28px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.18); }
+  50%       { box-shadow: 0 0 0 1px rgba(6,182,212,0.45), 0 0 55px rgba(6,182,212,0.5),  0 8px 28px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.18); }
 }
-.wb{
-  width:46px;height:36px;border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(0,0,0,0);transition:background .15s;
-  position:relative;
-}
-.wb:hover{background:rgba(255,255,255,0.05)}
-.wb.cl:hover{background:rgba(196,43,28,0.85)}
-.wb svg{
-  width:10px;height:10px;stroke:rgba(255,255,255,0.35);fill:none;
-  stroke-width:1.5;stroke-linecap:round;
-  transition:stroke .15s;pointer-events:none;
-}
-.wb:hover svg{stroke:rgba(255,255,255,0.9)}
-.wb.cl:hover svg{stroke:#fff}
-/* Divider between buttons */
-.wb+.wb::before{
-  content:'';position:absolute;left:0;top:10px;bottom:10px;
-  width:1px;background:rgba(255,255,255,0.05);
-}
-
-.drag{position:absolute;top:0;left:0;right:92px;height:40px;-webkit-app-region:drag;z-index:7000}
-
-/* ══════════════════════════════════════
-   TOP ACCENT
-══════════════════════════════════════ */
-.accent{
-  position:absolute;top:0;left:0;right:0;height:1px;z-index:30;border-radius:20px 20px 0 0;
-  background:linear-gradient(90deg,
-    transparent 0%,rgba(6,182,212,0) 8%,
-    rgba(6,182,212,.9) 25%,rgba(139,92,246,.7) 50%,
-    rgba(6,182,212,.9) 75%,rgba(6,182,212,0) 92%,transparent 100%);
-  background-size:300% 100%;
-  animation:acf 5s linear infinite;
-  box-shadow:0 0 30px rgba(6,182,212,.35),0 0 80px rgba(6,182,212,.1);
-}
-@keyframes acf{0%{background-position:100% 0}100%{background-position:-200% 0}}
-
-/* ══════════════════════════════════════
-   LAYOUT
-══════════════════════════════════════ */
-.layout{position:relative;z-index:10;display:grid;grid-template-columns:280px 1fr;height:100%}
-
-/* ── LEFT ── */
-.left{
-  position:relative;overflow:hidden;
-  background:linear-gradient(160deg,#070b17 0%,#040508 100%);
-  border-right:1px solid rgba(255,255,255,0.04);
-  display:flex;flex-direction:column;padding:44px 32px 28px;
-}
-.left::before{
-  content:'';position:absolute;top:-120px;left:-80px;
-  width:360px;height:360px;border-radius:50%;
-  background:radial-gradient(circle,rgba(6,182,212,0.09) 0%,transparent 65%);
-  animation:lgf 9s ease-in-out infinite;pointer-events:none;
-}
-.left::after{
-  content:'';position:absolute;bottom:-100px;right:-60px;
-  width:280px;height:280px;border-radius:50%;
-  background:radial-gradient(circle,rgba(139,92,246,0.07) 0%,transparent 65%);
-  pointer-events:none;
-}
-@keyframes lgf{0%,100%{opacity:.5;transform:translate(0,0)}50%{opacity:1;transform:translate(12px,18px)}}
-
-.lgrid{
-  position:absolute;inset:0;
-  background-image:
-    linear-gradient(rgba(6,182,212,0.022) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(6,182,212,0.022) 1px,transparent 1px);
-  background-size:26px 26px;
-  mask-image:radial-gradient(ellipse 120% 120% at 50% 40%,black 20%,transparent 100%);
-}
-
-/* Logo */
-.llogo{position:relative;z-index:2;margin-bottom:auto}
-.lic{
-  width:58px;height:58px;border-radius:16px;
-  background:linear-gradient(135deg,#0c4a6e,#0e7490 50%,#06b6d4);
-  display:flex;align-items:center;justify-content:center;
-  overflow:hidden;position:relative;margin-bottom:20px;
-  box-shadow:
-    0 0 0 1px rgba(6,182,212,0.28),
-    0 0 35px rgba(6,182,212,0.32),
-    0 8px 28px rgba(0,0,0,0.6),
-    inset 0 1px 0 rgba(255,255,255,0.18);
-  animation:licf 4.5s ease-in-out infinite;
-}
-.lic::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.18) 0%,transparent 55%)}
-.lic::after{
-  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
-  animation:sweep 4s ease-in-out 1s infinite;
-}
-.lic svg{width:26px;height:26px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}
-@keyframes licf{
-  0%,100%{box-shadow:0 0 0 1px rgba(6,182,212,0.28),0 0 35px rgba(6,182,212,0.32),0 8px 28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.18)}
-  50%{box-shadow:0 0 0 1px rgba(6,182,212,0.45),0 0 55px rgba(6,182,212,0.5),0 8px 28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.18)}
-}
-.ln{font-size:22px;font-weight:700;letter-spacing:-.5px;background:linear-gradient(135deg,#f4f4f5,#a1a1aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px}
-.lt{font-size:9px;color:rgba(6,182,212,0.55);letter-spacing:.18em;text-transform:uppercase}
+.ln { font-size: 22px; font-weight: 700; letter-spacing: -.5px; background: linear-gradient(135deg, #f4f4f5, #a1a1aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 4px; }
+.lt { font-size: 9px; color: rgba(6,182,212,0.55); letter-spacing: .18em; text-transform: uppercase; }
 
 /* Step nav */
-.snav{position:relative;z-index:2;display:flex;flex-direction:column;gap:0;margin-bottom:28px}
-.si{display:flex;align-items:center;gap:11px;padding:9px 0;position:relative}
-.si:not(:last-child)::after{
-  content:'';position:absolute;left:11px;top:32px;
-  width:1px;height:calc(100% - 8px);
-  background:rgba(255,255,255,0.05);
-}
-.sd{
-  width:23px;height:23px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:9px;font-weight:700;position:relative;z-index:1;
-  transition:all .45s cubic-bezier(0.16,1,0.3,1);
-}
-.sd.p{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);color:#27272a}
-.sd.a{
-  background:linear-gradient(135deg,#0e7490,#06b6d4);color:#fff;
-  box-shadow:0 0 0 3px rgba(6,182,212,0.12),0 0 16px rgba(6,182,212,0.45);
-  animation:apu 2s ease-in-out infinite;
-}
-.sd.d{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:#22c55e;font-size:11px}
-@keyframes apu{0%,100%{box-shadow:0 0 0 3px rgba(6,182,212,0.12),0 0 16px rgba(6,182,212,0.45)}50%{box-shadow:0 0 0 5px rgba(6,182,212,0.08),0 0 28px rgba(6,182,212,0.6)}}
-.sl{font-size:11px;font-weight:500;transition:color .3s}
-.si .sl{color:#27272a}
-.si.a .sl{color:#e4e4e7}
-.si.d .sl{color:#3f3f46}
+.snav { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 0; margin-bottom: 28px; }
+.si { display: flex; align-items: center; gap: 11px; padding: 9px 0; position: relative; }
+.si:not(:last-child)::after { content: ''; position: absolute; left: 11px; top: 32px; width: 1px; height: calc(100% - 8px); background: rgba(255,255,255,0.05); }
+.sd { width: 23px; height: 23px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; position: relative; z-index: 1; transition: all .45s var(--ease); }
+.sd.p { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); color: #27272a; }
+.sd.a { background: linear-gradient(135deg, #0e7490, #06b6d4); color: #fff; box-shadow: 0 0 0 3px rgba(6,182,212,0.12), 0 0 16px rgba(6,182,212,0.45); animation: apu 2s ease-in-out infinite; }
+.sd.d { background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.25); color: #22c55e; font-size: 11px; }
+@keyframes apu { 0%, 100% { box-shadow: 0 0 0 3px rgba(6,182,212,0.12), 0 0 16px rgba(6,182,212,0.45); } 50% { box-shadow: 0 0 0 5px rgba(6,182,212,0.08), 0 0 28px rgba(6,182,212,0.6); } }
+.sl { font-size: 11px; font-weight: 500; transition: color .3s; }
+.si .sl { color: #27272a; }
+.si.a .sl { color: #e4e4e7; }
+.si.d .sl { color: #3f3f46; }
+.lfooter { position: relative; z-index: 2; font-size: 9px; color: #1f1f23; letter-spacing: .05em; }
 
-.lfooter{position:relative;z-index:2;font-size:9px;color:#1f1f23;letter-spacing:.05em}
-
-/* ── RIGHT ── */
-.right{
-  position:relative;overflow:hidden;
-  background:linear-gradient(155deg,#060710 0%,#040407 100%);
-  display:flex;flex-direction:column;padding:44px 44px 32px;
+/* ── Right panel ──────────────────────────────────────────────────────── */
+.right {
+  position: relative; overflow: hidden;
+  background: linear-gradient(155deg, var(--c-right) 0%, #040407 100%);
+  display: flex; flex-direction: column; padding: 44px 44px 32px;
 }
-.right::before{
-  content:'';position:absolute;top:-80px;right:-80px;
-  width:400px;height:400px;border-radius:50%;
-  background:radial-gradient(circle,rgba(139,92,246,0.04) 0%,transparent 65%);
-  pointer-events:none;
+.right::before {
+  content: ''; position: absolute; top: -80px; right: -80px; width: 400px; height: 400px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.04) 0%, transparent 65%); pointer-events: none;
 }
 
-/* Screens */
-.screen{
-  width:100%;flex:1;display:flex;flex-direction:column;
-  opacity:0;transform:translateX(18px);pointer-events:none;
-  transition:opacity .5s cubic-bezier(0.16,1,0.3,1),transform .5s cubic-bezier(0.16,1,0.3,1);
-  position:absolute;top:44px;left:44px;right:44px;bottom:32px;
+/* ── Screen transitions ───────────────────────────────────────────────── */
+.screen {
+  width: 100%; flex: 1; display: flex; flex-direction: column;
+  opacity: 0; transform: translateX(18px); pointer-events: none;
+  transition: opacity .5s var(--ease), transform .5s var(--ease);
+  position: absolute; top: 44px; left: 44px; right: 44px; bottom: 32px;
 }
-.screen.on{opacity:1;transform:translateX(0);pointer-events:all;position:relative;top:auto;left:auto;right:auto;bottom:auto}
+.screen.on { opacity: 1; transform: translateX(0); pointer-events: all; position: relative; top: auto; left: auto; right: auto; bottom: auto; }
 
-.stitle{font-size:21px;font-weight:700;letter-spacing:-.4px;color:#f4f4f5;margin-bottom:5px}
-.ssub{font-size:11px;color:#3f3f46;line-height:1.7;margin-bottom:22px}
+.stitle { font-size: 21px; font-weight: 700; letter-spacing: -.4px; color: #f4f4f5; margin-bottom: 5px; }
+.ssub { font-size: 11px; color: #3f3f46; line-height: 1.7; margin-bottom: 22px; }
 
-/* Features */
-.flist{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
-.fi{
-  display:flex;align-items:center;gap:13px;
-  background:rgba(255,255,255,0.016);
-  border:1px solid rgba(255,255,255,0.045);
-  border-radius:11px;padding:11px 15px;
-  transition:all .3s cubic-bezier(0.16,1,0.3,1);
-  position:relative;overflow:hidden;cursor:default;
+/* ── Feature list ─────────────────────────────────────────────────────── */
+.flist { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.fi {
+  display: flex; align-items: center; gap: 13px;
+  background: rgba(255,255,255,0.016); border: 1px solid rgba(255,255,255,0.045);
+  border-radius: 11px; padding: 11px 15px;
+  transition: all .3s var(--ease); position: relative; overflow: hidden; cursor: default;
 }
-.fi::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:0;
-  background:linear-gradient(180deg,rgba(6,182,212,0.6),rgba(139,92,246,0.4));
-  transition:width .3s;border-radius:11px 0 0 11px;
-}
-.fi:hover{background:rgba(6,182,212,0.035);border-color:rgba(6,182,212,0.1);transform:translateX(4px)}
-.fi:hover::before{width:2px}
-.fic{
-  width:32px;height:32px;border-radius:9px;flex-shrink:0;
-  background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.1);
-  display:flex;align-items:center;justify-content:center;
-}
-.fic svg{width:14px;height:14px;stroke:#06b6d4;fill:none;stroke-width:1.8;stroke-linecap:round}
-.ft{font-size:11px;font-weight:600;color:#d4d4d8;margin-bottom:1px}
-.fs{font-size:9px;color:#3f3f46}
+.fi::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(180deg, rgba(6,182,212,0.6), rgba(139,92,246,0.4)); transition: width .3s; border-radius: 11px 0 0 11px; }
+.fi:hover { background: rgba(6,182,212,0.035); border-color: rgba(6,182,212,0.1); transform: translateX(4px); }
+.fi:hover::before { width: 2px; }
+.fic { width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.1); display: flex; align-items: center; justify-content: center; }
+.fic svg { width: 14px; height: 14px; stroke: #06b6d4; fill: none; stroke-width: 1.8; stroke-linecap: round; }
+.ft { font-size: 11px; font-weight: 600; color: #d4d4d8; margin-bottom: 1px; }
+.fs2 { font-size: 9px; color: #3f3f46; }
 
-/* Path */
-.prow{
-  background:rgba(0,0,0,0.22);border:1px solid rgba(255,255,255,0.04);
-  border-radius:9px;padding:9px 13px;display:flex;align-items:center;gap:9px;margin-bottom:3px;
+/* ── Install path input ───────────────────────────────────────────────── */
+.prow {
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 9px; padding: 9px 13px; display: flex; align-items: center; gap: 9px;
+  margin-bottom: 3px; transition: border-color .2s, background .2s;
+  cursor: text;
 }
-.prow svg{width:13px;height:13px;stroke:#27272a;fill:none;stroke-width:1.8;stroke-linecap:round;flex-shrink:0}
-.ptxt{font-size:9px;color:#27272a;font-family:'Consolas',monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.phint{font-size:9px;color:#1c1c1e;margin-bottom:18px;padding-left:1px}
-
-/* Existing */
-.en{
-  background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.1);
-  border-radius:9px;padding:10px 13px;margin-bottom:12px;
-  display:none;align-items:flex-start;gap:9px;
+.prow:focus-within { border-color: rgba(6,182,212,0.28); background: rgba(0,0,0,0.32); }
+.prow.invalid { border-color: rgba(239,68,68,0.3); }
+.prow svg { width: 13px; height: 13px; stroke: var(--c-faint); fill: none; stroke-width: 1.8; stroke-linecap: round; flex-shrink: 0; transition: stroke .2s; }
+.prow:focus-within svg { stroke: rgba(6,182,212,0.5); }
+.prow.invalid svg { stroke: rgba(239,68,68,0.5); }
+#pd {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: 'Consolas', 'Courier New', monospace; font-size: 9px;
+  color: var(--c-faint); min-width: 0; caret-color: #06b6d4;
+  -webkit-app-region: no-drag;
 }
-.en.show{display:flex}
-.en svg{width:14px;height:14px;stroke:#fbbf24;fill:none;stroke-width:1.8;flex-shrink:0;margin-top:1px}
-.ent{font-size:11px;font-weight:600;color:#fbbf24;margin-bottom:2px}
-.ens{font-size:9px;color:#713f12}
+#pd:focus { color: #52525b; }
+#pd.invalid { color: rgba(239,68,68,0.7); }
+.phint { font-size: 9px; color: #1c1c1e; margin-bottom: 14px; padding-left: 1px; transition: color .2s; }
+.phint.err { color: rgba(239,68,68,0.65); display: none; }
+.phint.err.show { display: block; }
 
-.rops{display:none;flex-direction:column;gap:6px;margin-bottom:14px}
-.rops.show{display:flex}
-.rb{display:flex;align-items:center;gap:8px;padding:9px 13px;border:none;border-radius:8px;cursor:pointer;font-size:10px;font-weight:600;transition:all .2s}
-.rb svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
-.rb.u{background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);color:#22d3ee}
-.rb.u:hover{background:rgba(6,182,212,0.12);transform:translateX(4px)}
-.rb.x{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12);color:#f87171}
-.rb.x:hover{background:rgba(239,68,68,0.1);transform:translateX(4px)}
-
-/* ── PROGRESS ── */
-.ptrack{width:100%;height:2px;background:rgba(255,255,255,0.04);border-radius:99px;overflow:hidden;margin-bottom:10px;position:relative}
-.pfill{
-  height:100%;width:0%;border-radius:99px;
-  background:linear-gradient(90deg,#0c4a6e,#0e7490,#06b6d4,#22d3ee);
-  background-size:300% 100%;
-  animation:pfl 2s linear infinite;
-  box-shadow:0 0 15px rgba(6,182,212,.8),0 0 30px rgba(6,182,212,.3);
-  transition:width .75s cubic-bezier(0.4,0,0.2,1);
+/* ── Already installed notice ─────────────────────────────────────────── */
+.en {
+  background: rgba(251,191,36,0.04); border: 1px solid rgba(251,191,36,0.1);
+  border-radius: 9px; padding: 10px 13px; margin-bottom: 12px;
+  display: none; align-items: flex-start; gap: 9px;
 }
-@keyframes pfl{0%{background-position:200% 0}100%{background-position:0% 0}}
+.en.show { display: flex; }
+.en svg { width: 14px; height: 14px; stroke: #fbbf24; fill: none; stroke-width: 1.8; flex-shrink: 0; margin-top: 1px; }
+.ent { font-size: 11px; font-weight: 600; color: #fbbf24; margin-bottom: 2px; }
+.ens { font-size: 9px; color: #713f12; }
 
-.pmeta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px}
-.pmsg{font-size:10px;color:#3f3f46;transition:all .4s}
-.ppct{
-  font-size:22px;font-weight:800;letter-spacing:-1px;
-  background:linear-gradient(135deg,#06b6d4,#22d3ee);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  font-variant-numeric:tabular-nums;line-height:1;
+/* ── Reinstall / Uninstall buttons ────────────────────────────────────── */
+.rops { display: none; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.rops.show { display: flex; }
+.rb { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: none; border-radius: 8px; cursor: pointer; font-size: 10px; font-weight: 600; transition: all .2s; -webkit-app-region: no-drag; }
+.rb svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; flex-shrink: 0; }
+.rb.u { background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.15); color: #22d3ee; }
+.rb.u:hover { background: rgba(6,182,212,0.12); transform: translateX(4px); }
+.rb.x { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.12); color: #f87171; }
+.rb.x:hover { background: rgba(239,68,68,0.1); transform: translateX(4px); }
+
+/* ── Progress screen ──────────────────────────────────────────────────── */
+.ptrack { width: 100%; height: 2px; background: rgba(255,255,255,0.04); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+.pfill {
+  height: 100%; width: 0%; border-radius: 99px;
+  background: linear-gradient(90deg, #0c4a6e, #0e7490, #06b6d4, #22d3ee); background-size: 300% 100%;
+  animation: pfl 2s linear infinite;
+  box-shadow: 0 0 15px rgba(6,182,212,.8), 0 0 30px rgba(6,182,212,.3);
+  transition: width .75s cubic-bezier(0.4,0,0.2,1);
 }
-.ppct span{font-size:10px;font-weight:500;letter-spacing:0}
-
-.slog{
-  flex:1;background:rgba(0,0,0,0.18);
-  border:1px solid rgba(255,255,255,0.035);border-radius:11px;
-  padding:12px 14px;overflow:hidden;display:flex;flex-direction:column;
+@keyframes pfl { 0% { background-position: 200% 0; } 100% { background-position: 0% 0; } }
+.pmeta { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+.pmsg { font-size: 10px; color: #3f3f46; transition: all .4s; }
+.ppct {
+  font-size: 22px; font-weight: 800; letter-spacing: -1px;
+  background: linear-gradient(135deg, #06b6d4, #22d3ee);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  font-variant-numeric: tabular-nums; line-height: 1;
 }
-.slog-h{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#1f1f23;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.slog-h::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.03)}
-.slogitems{display:flex;flex-direction:column;gap:7px;overflow:hidden}
-.sit{display:flex;align-items:center;gap:8px;animation:sitn .3s ease both}
-.sdot{width:4px;height:4px;border-radius:50%;flex-shrink:0;transition:all .3s}
-.sit.dn .sdot{background:#22c55e}
-.sit.ac .sdot{background:#06b6d4;box-shadow:0 0 8px rgba(6,182,212,1);animation:dpa 1s ease-in-out infinite}
-.sit.dn{font-size:9px;color:#27272a}
-.sit.ac{font-size:9px;color:#52525b}
-@keyframes dpa{0%,100%{opacity:1}50%{opacity:.2}}
-@keyframes sitn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
-
-/* ── DONE ── */
-.dw{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;text-align:center}
-.dcheck{
-  width:68px;height:68px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:18px;
-  animation:pop .7s cubic-bezier(0.16,1,0.3,1) both;
+.ppct span { font-size: 10px; font-weight: 500; letter-spacing: 0; }
+.slog {
+  flex: 1; background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.035);
+  border-radius: 11px; padding: 12px 14px; overflow: hidden; display: flex; flex-direction: column;
 }
-.dcheck.ok{background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.18);box-shadow:0 0 40px rgba(34,197,94,0.15)}
-.dcheck.rm{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12)}
-.dcheck svg{width:28px;height:28px;fill:none;stroke-width:2;stroke-linecap:round}
-.dcheck.ok svg{stroke:#22c55e}
-.dcheck.rm svg{stroke:#f87171}
-@keyframes pop{from{scale:0;opacity:0;rotate:-15deg}to{scale:1;opacity:1;rotate:0deg}}
+.slog-h { font-size: 8px; letter-spacing: .12em; text-transform: uppercase; color: #1f1f23; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.slog-h::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.03); }
+.slogitems { display: flex; flex-direction: column; gap: 7px; overflow: hidden; }
+.sit { display: flex; align-items: center; gap: 8px; animation: sitn .3s ease both; }
+.sdot { width: 4px; height: 4px; border-radius: 50%; flex-shrink: 0; transition: all .3s; }
+.sit.dn .sdot { background: #22c55e; }
+.sit.ac .sdot { background: #06b6d4; box-shadow: 0 0 8px rgba(6,182,212,1); animation: dpa 1s ease-in-out infinite; }
+.sit.dn { font-size: 9px; color: #27272a; }
+.sit.ac { font-size: 9px; color: #52525b; }
+@keyframes dpa  { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+@keyframes sitn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
 
-/* ── BUTTONS ── */
-.brow{display:flex;gap:7px;justify-content:flex-end;margin-top:auto;padding-top:10px}
-.bcol{display:flex;flex-direction:column;gap:7px;width:100%;margin-top:auto}
-
-.btn{
-  height:38px;padding:0 20px;border:none;border-radius:9px;
-  font-size:11px;font-weight:600;cursor:pointer;
-  display:inline-flex;align-items:center;gap:6px;
-  transition:all .25s cubic-bezier(0.16,1,0.3,1);
-  position:relative;overflow:hidden;
+/* ── Done / Uninstalled screens ───────────────────────────────────────── */
+.dw { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; text-align: center; }
+.dcheck {
+  width: 68px; height: 68px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+  animation: pop .7s var(--ease) both;
 }
-.btn::after{
-  content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent);
-  transition:left .6s;
-}
-.btn:hover::after{left:100%}
-.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+.dcheck.ok { background: rgba(34,197,94,0.07); border: 1px solid rgba(34,197,94,0.18); box-shadow: 0 0 40px rgba(34,197,94,0.15); }
+.dcheck.rm { background: rgba(239,68,68,0.05); border: 1px solid rgba(239,68,68,0.12); }
+.dcheck svg { width: 28px; height: 28px; fill: none; stroke-width: 2; stroke-linecap: round; }
+.dcheck.ok svg { stroke: #22c55e; }
+.dcheck.rm svg { stroke: #f87171; }
+@keyframes pop { from { scale: 0; opacity: 0; rotate: -15deg; } to { scale: 1; opacity: 1; rotate: 0deg; } }
 
-.bp{
-  background:linear-gradient(135deg,#0c4a6e,#0e7490 45%,#06b6d4);color:#fff;
-  box-shadow:0 4px 18px rgba(6,182,212,0.28),0 0 0 1px rgba(6,182,212,0.14),inset 0 1px 0 rgba(255,255,255,0.12);
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.brow { display: flex; gap: 7px; justify-content: flex-end; margin-top: auto; padding-top: 10px; }
+.bcol { display: flex; flex-direction: column; gap: 7px; width: 100%; margin-top: auto; }
+.btn {
+  height: 38px; padding: 0 20px; border: none; border-radius: 9px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+  transition: all .25s var(--ease);
+  position: relative; overflow: hidden; -webkit-app-region: no-drag;
 }
-.bp:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(6,182,212,0.4),0 0 0 1px rgba(6,182,212,0.22),inset 0 1px 0 rgba(255,255,255,0.12)}
-.bp:active{transform:translateY(0)}
-.bg{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);color:#3f3f46}
-.bg:hover{background:rgba(255,255,255,0.06);color:#52525b}
+.btn::after {
+  content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+  transition: left .6s;
+}
+.btn:hover::after { left: 100%; }
+.btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; flex-shrink: 0; }
+.bp {
+  background: linear-gradient(135deg, #0c4a6e, #0e7490 45%, #06b6d4); color: #fff;
+  box-shadow: 0 4px 18px rgba(6,182,212,0.28), 0 0 0 1px rgba(6,182,212,0.14), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.bp:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(6,182,212,0.4), 0 0 0 1px rgba(6,182,212,0.22), inset 0 1px 0 rgba(255,255,255,0.12); }
+.bp:active { transform: translateY(0); }
+.bp:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.bg { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); color: #3f3f46; }
+.bg:hover { background: rgba(255,255,255,0.06); color: #52525b; }
 
-/* version */
-.vtag{position:absolute;bottom:14px;right:18px;font-size:8px;color:#18181b;letter-spacing:.05em;z-index:10}
+.vtag { position: absolute; bottom: 14px; right: 18px; font-size: 8px; color: #18181b; letter-spacing: .05em; z-index: 10; }
 </style>
 </head>
 <body>
 <div class="shell">
 
-<!-- ══ INTRO ══════════════════════════════════════════════════════ -->
+<!-- ══ INTRO ═════════════════════════════════════════════════════════════ -->
 <div id="intro">
   <canvas id="ic"></canvas>
   <div class="ihex"></div>
@@ -480,13 +406,12 @@ html,body{
   </div>
 </div>
 
-<!-- ══ MAIN ═══════════════════════════════════════════════════════ -->
+<!-- ══ MAIN ══════════════════════════════════════════════════════════════ -->
 <div class="accent"></div>
 <div class="drag"></div>
 
-<!-- Window controls — perfectly visible -->
 <div class="wc">
-  <button class="wb mn" onclick="window.installer?.quit()" title="Minimize">
+  <button class="wb mn" onclick="window.installer?.quit()" title="Close">
     <svg viewBox="0 0 10 10"><line x1="1" y1="5" x2="9" y2="5"/></svg>
   </button>
   <button class="wb cl" onclick="window.installer?.quit()" title="Close">
@@ -496,7 +421,7 @@ html,body{
 
 <div class="layout">
 
-  <!-- LEFT -->
+  <!-- LEFT PANEL -->
   <div class="left">
     <div class="lgrid"></div>
     <div class="llogo">
@@ -516,29 +441,35 @@ html,body{
 
     <div class="snav" id="snav">
       <div class="si a" data-i="0"><div class="sd a" id="sd0">1</div><div class="sl">Welcome</div></div>
-      <div class="si" data-i="1"><div class="sd p" id="sd1">2</div><div class="sl">Installing</div></div>
-      <div class="si" data-i="2"><div class="sd p" id="sd2">3</div><div class="sl">Complete</div></div>
+      <div class="si"   data-i="1"><div class="sd p" id="sd1">2</div><div class="sl">Installing</div></div>
+      <div class="si"   data-i="2"><div class="sd p" id="sd2">3</div><div class="sl">Complete</div></div>
     </div>
 
     <div class="lfooter">© 2025 AxiomPips · axiompips.com</div>
   </div>
 
-  <!-- RIGHT -->
+  <!-- RIGHT PANEL -->
   <div class="right">
 
-    <!-- Welcome -->
+    <!-- ── Welcome ── -->
     <div class="screen on" id="sw">
       <div class="stitle">Welcome to AxiomPips</div>
       <div class="ssub">Professional-grade forex calculators and trading tools,<br/>now available as a native Windows desktop experience.</div>
 
+      <!-- Already installed notice -->
       <div class="en" id="en">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <div><div class="ent" id="ent">Already Installed</div><div class="ens" id="ens">Choose an action below</div></div>
+        <div>
+          <div class="ent" id="ent">Already Installed</div>
+          <div class="ens" id="ens">Choose an action below</div>
+        </div>
       </div>
+
+      <!-- Reinstall / Uninstall (shown when already installed) -->
       <div class="rops" id="rops">
         <button class="rb u" onclick="doUpdate()">
           <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          Update to latest version
+          Reinstall / Update
         </button>
         <button class="rb x" onclick="doUninstall()">
           <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
@@ -546,6 +477,7 @@ html,body{
         </button>
       </div>
 
+      <!-- Features + path (shown when not yet installed) -->
       <div id="fs">
         <div class="flist">
           <div class="fi">
@@ -554,18 +486,21 @@ html,body{
           </div>
           <div class="fi">
             <div class="fic"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-            <div><div class="ft">13+ Professional Calculators</div><div class="fs2">Position size, pip value, risk/reward, fibonacci & more</div></div>
+            <div><div class="ft">13+ Professional Calculators</div><div class="fs2">Position size, pip value, risk/reward, fibonacci &amp; more</div></div>
           </div>
           <div class="fi">
             <div class="fic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <div><div class="ft">Secure & Private</div><div class="fs2">Your trading data stays on your device, always</div></div>
+            <div><div class="ft">Secure &amp; Private</div><div class="fs2">Your trading data stays on your device, always</div></div>
           </div>
         </div>
-        <div class="prow">
+
+        <!-- Editable install path -->
+        <div class="prow" id="prow">
           <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          <div class="ptxt" id="pd">Loading…</div>
+          <input type="text" id="pd" class="ptxt" placeholder="C:\Users\…\AppData\Local\AxiomPips" autocomplete="off" spellcheck="false" />
         </div>
-        <div class="phint">Install location · Windows x64</div>
+        <div class="phint err" id="pherr">Invalid path — must be an absolute Windows path, e.g. C:\Users\…\AxiomPips</div>
+        <div class="phint">Install location · Windows x64 · Click to edit</div>
       </div>
 
       <div class="brow">
@@ -577,7 +512,7 @@ html,body{
       </div>
     </div>
 
-    <!-- Progress -->
+    <!-- ── Installing ── -->
     <div class="screen" id="sp">
       <div class="stitle" id="ptitle">Installing AxiomPips…</div>
       <div class="ssub">Please wait — preparing your professional trading workspace</div>
@@ -592,137 +527,209 @@ html,body{
       </div>
     </div>
 
-    <!-- Done -->
+    <!-- ── Complete ── -->
     <div class="screen" id="sd">
       <div class="dw">
-        <div class="dcheck ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-        <div class="stitle" style="text-align:center">Successfully Installed</div>
-        <div class="ssub" style="text-align:center;margin-bottom:28px">AxiomPips is ready on your desktop.<br/>Your professional trading toolkit is live.</div>
-        <div class="bcol" style="max-width:260px">
+        <div class="dcheck ok">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <div class="stitle" style="text-align:center">AxiomPips is ready.</div>
+        <div class="ssub" style="text-align:center;margin-bottom:28px">
+          Your professional trading toolkit is installed.<br/>Launch it anytime from your desktop shortcut.
+        </div>
+        <div class="bcol" style="max-width:240px">
           <button class="btn bp" style="width:100%;justify-content:center" onclick="window.installer?.launchApp()">
             <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             Launch AxiomPips
           </button>
-          <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.quit()">Close Setup</button>
+          <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.openWebsite()">
+            Visit axiompips.com
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Uninstalled -->
+    <!-- ── Uninstalled ── -->
     <div class="screen" id="su">
       <div class="dw">
-        <div class="dcheck rm"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></div>
+        <div class="dcheck rm">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </div>
         <div class="stitle" style="text-align:center">Uninstalled</div>
-        <div class="ssub" style="text-align:center;margin-bottom:28px">AxiomPips has been removed from your system.<br/>You can reinstall anytime from axiompips.com</div>
-        <div class="bcol" style="max-width:260px">
+        <div class="ssub" style="text-align:center;margin-bottom:28px">
+          AxiomPips has been removed from your system.<br/>You can reinstall anytime from axiompips.com
+        </div>
+        <div class="bcol" style="max-width:240px">
           <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.openWebsite()">Visit axiompips.com</button>
           <button class="btn bg" style="width:100%;justify-content:center" onclick="window.installer?.quit()">Close</button>
         </div>
       </div>
     </div>
 
-  </div>
-</div>
+  </div><!-- /right -->
+</div><!-- /layout -->
+
 <div class="vtag">Windows x64 · Secure Setup</div>
-</div>
+</div><!-- /shell -->
 
 <script>
-// ── Intro particles ──────────────────────────────────────────────────────────
-const ic=document.getElementById('ic'),ix=ic.getContext('2d');
-ic.width=900;ic.height=560;
-const pp=Array.from({length:65},()=>({
-  x:Math.random()*900,y:Math.random()*560,
-  dx:(Math.random()-.5)*.28,dy:(Math.random()-.5)*.28,
-  r:Math.random()*1.2+.15,a:Math.random()*.28+.04,
-  h:Math.random()>.62?187:263
+'use strict';
+
+// ── Intro particle canvas ─────────────────────────────────────────────────────
+const ic = document.getElementById('ic'), ix = ic.getContext('2d');
+ic.width = 900; ic.height = 560;
+const pp = Array.from({ length: 65 }, () => ({
+  x: Math.random() * 900, y: Math.random() * 560,
+  dx: (Math.random() - .5) * .28, dy: (Math.random() - .5) * .28,
+  r: Math.random() * 1.2 + .15, a: Math.random() * .28 + .04,
+  h: Math.random() > .62 ? 187 : 263,
 }));
-(function frame(){
-  ix.clearRect(0,0,900,560);
-  pp.forEach(p=>{
-    p.x+=p.dx;p.y+=p.dy;
-    if(p.x<0)p.x=900;if(p.x>900)p.x=0;
-    if(p.y<0)p.y=560;if(p.y>560)p.y=0;
-    ix.beginPath();ix.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ix.fillStyle=`hsla(${p.h},78%,66%,${p.a})`;ix.fill();
+(function frame() {
+  ix.clearRect(0, 0, 900, 560);
+  pp.forEach(p => {
+    p.x += p.dx; p.y += p.dy;
+    if (p.x < 0) p.x = 900; if (p.x > 900) p.x = 0;
+    if (p.y < 0) p.y = 560; if (p.y > 560) p.y = 0;
+    ix.beginPath(); ix.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ix.fillStyle = `hsla(${p.h},78%,66%,${p.a})`; ix.fill();
   });
-  for(let i=0;i<pp.length;i++)for(let j=i+1;j<pp.length;j++){
-    const dx=pp[i].x-pp[j].x,dy=pp[i].y-pp[j].y,d=Math.sqrt(dx*dx+dy*dy);
-    if(d<72){ix.beginPath();ix.moveTo(pp[i].x,pp[i].y);ix.lineTo(pp[j].x,pp[j].y);
-      ix.strokeStyle=`rgba(6,182,212,${.038*(1-d/72)})`;ix.lineWidth=.4;ix.stroke();}
+  for (let i = 0; i < pp.length; i++) for (let j = i + 1; j < pp.length; j++) {
+    const dx = pp[i].x - pp[j].x, dy = pp[i].y - pp[j].y, d = Math.sqrt(dx*dx + dy*dy);
+    if (d < 72) {
+      ix.beginPath(); ix.moveTo(pp[i].x, pp[i].y); ix.lineTo(pp[j].x, pp[j].y);
+      ix.strokeStyle = `rgba(6,182,212,${.038 * (1 - d / 72)})`; ix.lineWidth = .4; ix.stroke();
+    }
   }
   requestAnimationFrame(frame);
 })();
 
-// ── Status cycle ─────────────────────────────────────────────────────────────
-const stts=['Initializing core systems…','Loading trading engine…','Preparing workspace…','Almost ready…'];
-let si2=0;const ise=document.getElementById('istat');
-const sci=setInterval(()=>{si2++;if(si2<stts.length)ise.textContent=stts[si2];else clearInterval(sci)},620);
+// ── Intro status cycling ──────────────────────────────────────────────────────
+const statuses = ['Initializing core systems…', 'Loading trading engine…', 'Preparing workspace…', 'Almost ready…'];
+let si = 0;
+const ise = document.getElementById('istat');
+const sci = setInterval(() => { si++; if (si < statuses.length) ise.textContent = statuses[si]; else clearInterval(sci); }, 620);
 
-setTimeout(()=>{
-  const intr=document.getElementById('intro');
-  intr.style.transition='opacity 1.1s cubic-bezier(0.4,0,0.2,1),transform 1.1s cubic-bezier(0.4,0,0.2,1)';
-  intr.style.opacity='0';intr.style.transform='scale(1.025)';
-  setTimeout(()=>{intr.style.display='none';init()},1100);
-},3500);
+// Dismiss intro after 3.5 s → then call init()
+setTimeout(() => {
+  const intr = document.getElementById('intro');
+  intr.style.transition = 'opacity 1.1s cubic-bezier(0.4,0,0.2,1), transform 1.1s cubic-bezier(0.4,0,0.2,1)';
+  intr.style.opacity = '0'; intr.style.transform = 'scale(1.025)';
+  setTimeout(() => { intr.style.display = 'none'; init(); }, 1100);
+}, 3500);
 
-// ── Nav ──────────────────────────────────────────────────────────────────────
-function setNav(step){
-  document.querySelectorAll('.si').forEach((el,i)=>{
-    const d=document.getElementById('sd'+i);
+// ── Navigation / step indicator ───────────────────────────────────────────────
+function setNav(step) {
+  document.querySelectorAll('.si').forEach((el, i) => {
+    const d = document.getElementById('sd' + i);
     el.classList.remove('a');
-    d.classList.remove('a','p','d');
-    if(i<step){d.classList.add('d');d.textContent='✓'}
-    else if(i===step){el.classList.add('a');d.classList.add('a')}
-    else{d.classList.add('p')}
+    d.classList.remove('a', 'p', 'd');
+    if (i < step)     { d.classList.add('d'); d.textContent = '✓'; }
+    else if (i === step) { el.classList.add('a'); d.classList.add('a'); }
+    else               { d.classList.add('p'); }
   });
 }
-
-function show(id,nav=0){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
-  requestAnimationFrame(()=>document.getElementById(id)?.classList.add('on'));
+function show(id, nav = 0) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('on'));
+  requestAnimationFrame(() => document.getElementById(id)?.classList.add('on'));
   setNav(nav);
 }
 
-// ── State ────────────────────────────────────────────────────────────────────
-let edata=null,ipath='',isUn=false;
-async function init(){
-  const d=await window.installer?.checkExisting();
-  edata=d;ipath=d?.path||'C:\\Users\\AppData\\Local\\AxiomPips';
-  document.getElementById('pd').textContent=ipath;
-  if(d?.installed){
+// ── Path validation ───────────────────────────────────────────────────────────
+function isValidWindowsPath(p) {
+  if (!p || typeof p !== 'string') return false;
+  const t = p.trim();
+  if (t.length === 0 || t.length > 260) return false;
+  if (!/^[a-zA-Z]:\\/.test(t))          return false; // must start with drive letter
+  if (t.includes('\0'))                  return false; // no null bytes
+  if (/(^|\\)\.\.($|\\)/.test(t))       return false; // no traversal
+  return true;
+}
+
+let ipath = '';
+let edata = null;
+let isUn  = false;
+
+function updatePathUI(val) {
+  ipath = val.trim();
+  const valid = isValidWindowsPath(ipath);
+  const prow  = document.getElementById('prow');
+  const pherr = document.getElementById('pherr');
+  const ib    = document.getElementById('ib');
+  const pdEl  = document.getElementById('pd');
+
+  prow.classList.toggle('invalid', !!ipath && !valid);
+  pdEl.classList.toggle('invalid', !!ipath && !valid);
+  pherr.classList.toggle('show', !!ipath && !valid);
+  ib.disabled = !valid;
+}
+
+document.getElementById('pd').addEventListener('input', function () {
+  updatePathUI(this.value);
+});
+
+// ── State init ────────────────────────────────────────────────────────────────
+async function init() {
+  // Disable Install button until we have a valid path
+  document.getElementById('ib').disabled = true;
+
+  const d = await window.installer?.checkExisting();
+  edata = d;
+
+  // Use checkExisting path, else fallback to getDefaultPath
+  let defaultPath = d?.path;
+  if (!defaultPath) defaultPath = await window.installer?.getDefaultPath();
+  if (!defaultPath) defaultPath = 'C:\\Users\\' + (navigator.userAgent.match(/Windows/) ? 'User' : 'User') + '\\AppData\\Local\\AxiomPips';
+
+  ipath = defaultPath;
+  const pdEl = document.getElementById('pd');
+  pdEl.value = ipath;
+  updatePathUI(ipath); // validates and sets button state
+
+  if (d?.installed) {
     document.getElementById('en').classList.add('show');
-    document.getElementById('ent').textContent=`Already installed · v${d.version||'?'}`;
+    document.getElementById('ent').textContent = `Already installed · v${d.version || '?'}`;
+    document.getElementById('ens').textContent = 'Choose an action below';
     document.getElementById('rops').classList.add('show');
-    document.getElementById('fs').style.display='none';
-    document.getElementById('ib').style.display='none';
+    document.getElementById('fs').style.display = 'none';
+    document.getElementById('ib').style.display = 'none';
   }
 }
 
-// ── Progress ─────────────────────────────────────────────────────────────────
-window.installer?.onProgress(({pct,msg})=>{
-  document.getElementById('pf').style.width=pct+'%';
-  document.getElementById('pn').textContent=pct;
-  document.getElementById('pm').textContent=msg;
-  const sl=document.getElementById('sl');
-  sl.querySelectorAll('.sit.ac').forEach(e=>{e.classList.remove('ac');e.classList.add('dn')});
-  const it=document.createElement('div');it.className='sit ac';
-  it.innerHTML=`<div class="sdot"></div><span>${msg}</span>`;
-  sl.appendChild(it);sl.scrollTop=sl.scrollHeight;
-  if(pct>=100)setTimeout(()=>show(isUn?'su':'sd',2),850);
+// ── Progress listener ─────────────────────────────────────────────────────────
+window.installer?.onProgress(({ pct, msg }) => {
+  document.getElementById('pf').style.width = pct + '%';
+  document.getElementById('pn').textContent = pct;
+  document.getElementById('pm').textContent = msg;
+
+  const sl = document.getElementById('sl');
+  sl.querySelectorAll('.sit.ac').forEach(e => { e.classList.remove('ac'); e.classList.add('dn'); });
+  const it = document.createElement('div');
+  it.className = 'sit ac';
+  it.innerHTML = `<div class="sdot"></div><span>${msg}</span>`;
+  sl.appendChild(it);
+  sl.scrollTop = sl.scrollHeight;
+
+  if (pct >= 100) setTimeout(() => show(isUn ? 'su' : 'sd', 2), 850);
 });
 
-// ── Actions ──────────────────────────────────────────────────────────────────
-async function doInstall(){
-  isUn=false;document.getElementById('ptitle').textContent='Installing AxiomPips…';
-  show('sp',1);await window.installer?.startInstall(ipath);
+// ── Actions ───────────────────────────────────────────────────────────────────
+async function doInstall() {
+  isUn = false;
+  document.getElementById('ptitle').textContent = 'Installing AxiomPips…';
+  show('sp', 1);
+  await window.installer?.startInstall(ipath);
 }
-async function doUpdate(){
-  isUn=false;document.getElementById('ptitle').textContent='Updating AxiomPips…';
-  show('sp',1);await window.installer?.startInstall(ipath);
+async function doUpdate() {
+  isUn = false;
+  document.getElementById('ptitle').textContent = 'Reinstalling AxiomPips…';
+  show('sp', 1);
+  await window.installer?.startInstall(edata?.path || ipath);
 }
-async function doUninstall(){
-  isUn=true;document.getElementById('ptitle').textContent='Uninstalling AxiomPips…';
-  show('sp',1);await window.installer?.startUninstall(edata?.path||ipath);
+async function doUninstall() {
+  isUn = true;
+  document.getElementById('ptitle').textContent = 'Uninstalling AxiomPips…';
+  show('sp', 1);
+  await window.installer?.startUninstall(edata?.path || ipath);
 }
 </script>
 </body>

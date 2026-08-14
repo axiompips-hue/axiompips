@@ -46,3 +46,15 @@ release/
 
 # Binary icon files are committed intentionally — only ignore auto-generated ones
 electron/assets/*.png.bak
+
+# AxiomPips desktop app — build outputs (never commit these)
+electron-installer/node_modules/
+electron-installer/dist-app/
+electron-installer/dist-installer/
+
+# ─── Security fix ─────────────────────────────────────────────────────────────
+# Feedback submissions contain real user email addresses.
+# Storage is now Supabase — this directory must never be committed again.
+# After adding this entry, also purge the old file from git history:
+#   git filter-repo --path feedback-data --invert-paths
+feedback-data/

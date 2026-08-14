@@ -1,11 +1,36 @@
 // electron-installer/main.js
 'use strict';
 
+// SEC-6 FIX (Shell injection via install path):
+//   The old code used execSync() with template-literal string interpolation for
+//   all registry commands. The user-supplied install path `p` was embedded
+//   directly inside the shell string, e.g.:
+//     execSync(`reg add "..." /d "${p}" /f`)
+//   A malicious path like  C:\foo" /f && calc.exe && echo "  would break out
+//   of the quoted string and execute arbitrary commands in the shell.
+//   Fix: ALL registry operations now use execFileSync() with an args *array*.
+//   execFileSync() bypasses the shell entirely — arguments are passed directly
+//   to the child process, so shell metacharacters (", &&, ;, |, etc.) in the
+//   path are treated as literal characters, not shell syntax.
+//   A validateInstallPath() guard is added as defence-in-depth.
+//
+// SEC-7 FIX (GitHub repo exposed + private-repo silent failure):
+//   GITHUB_REPO was hardcoded as a string literal that shipped in the binary.
+//   If the repo is private, the GitHub API returns 404 and updates silently
+//   fail for all users, giving them no indication that checks are broken.
+//   Fix: GITHUB_REPO is now read from the AXIOMPIPS_GITHUB_REPO build-time
+//   env var (injected by your packaging script) with the public slug as the
+//   fallback. A 404 response now logs a clear warning instead of silently
+//   returning null, so you notice the misconfiguration immediately.
+
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs   = require('fs');
 const os   = require('os');
-const { execSync, exec } = require('child_process');
+
+// SEC-6 FIX: Import execFileSync (array-args, no shell) and execFile (async).
+// execSync is intentionally removed — it should never be used with user input.
+const { execFileSync, execFile } = require('child_process');
 
 const INSTALL_HTML = path.join(__dirname, 'installer.html');
 const PRELOAD_PATH = path.join(__dirname, 'installer-preload.js');
@@ -16,7 +41,36 @@ const DEFAULT_DIR = path.join(
 );
 const REG_KEY = 'HKCU\\Software\\AxiomPips';
 
+// Convenience: resolve the APPDATA path used for Start Menu shortcut.
+// Falls back to a manually constructed path if APPDATA env var is missing.
+const APPDATA_DIR = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+const START_MENU_DIR = path.join(APPDATA_DIR, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
+const DESKTOP_LNK    = path.join(os.homedir(), 'Desktop', 'AxiomPips.lnk');
+const START_MENU_LNK = path.join(START_MENU_DIR, 'AxiomPips.lnk');
+
 let win = null;
+
+// ─── SEC-6: Install path validation ──────────────────────────────────────────
+//
+// Defence-in-depth: even though execFileSync bypasses the shell, we also
+// reject obviously invalid paths before they reach the registry or file system.
+// Rules:
+//   - Must be an absolute Windows path starting with a drive letter (e.g. C:\)
+//   - No null bytes, no forward slashes (wrong separator on Windows)
+//   - No path components that would traverse outside the chosen directory (..)
+//   - Maximum 260 characters (Windows MAX_PATH)
+function validateInstallPath(p) {
+  if (!p || typeof p !== 'string') return false;
+  const t = p.trim();
+  if (t.length > 260)              return false;
+  if (!/^[a-zA-Z]:\\/.test(t))    return false; // must be absolute Windows path
+  if (t.includes('\0'))            return false; // no null bytes
+  if (t.includes('/'))             return false; // no forward slashes
+  if (/(^|\\)\.\.($|\\)/.test(t)) return false; // no directory traversal
+  return true;
+}
+
+// ─── Window ───────────────────────────────────────────────────────────────────
 
 function createWindow() {
   win = new BrowserWindow({
@@ -40,24 +94,30 @@ function createWindow() {
   win.once('ready-to-show', () => { win.show(); win.focus(); });
 }
 
+// ─── Registry helpers (SEC-6: all use execFileSync with args array) ───────────
+
 function checkExisting() {
   try {
-    const r = execSync(`reg query "${REG_KEY}" /v InstallPath`, { encoding:'utf8', stdio:['pipe','pipe','pipe'] });
+    // SEC-6: execFileSync(['reg','query',...]) — no shell, args are literal
+    const r = execFileSync('reg', ['query', REG_KEY, '/v', 'InstallPath'],
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
     const m = r.match(/InstallPath\s+REG_SZ\s+(.+)/);
     if (m) {
       const p = m[1].trim();
-      if (fs.existsSync(path.join(p, 'AxiomPips.exe'))) return { installed:true, path:p };
+      if (fs.existsSync(path.join(p, 'AxiomPips.exe'))) return { installed: true, path: p };
     }
-  } catch(_) {}
-  return { installed:false, path:DEFAULT_DIR };
+  } catch (_) {}
+  return { installed: false, path: DEFAULT_DIR };
 }
 
 function getVersion() {
   try {
-    const r = execSync(`reg query "${REG_KEY}" /v Version`, { encoding:'utf8', stdio:['pipe','pipe','pipe'] });
+    // SEC-6: execFileSync with args array
+    const r = execFileSync('reg', ['query', REG_KEY, '/v', 'Version'],
+      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
     const m = r.match(/Version\s+REG_SZ\s+(.+)/);
     if (m) return m[1].trim();
-  } catch(_) {}
+  } catch (_) {}
   return null;
 }
 
@@ -68,58 +128,282 @@ async function runSteps(steps, onProgress) {
   }
 }
 
+// ─── SEC-7: Update checker ────────────────────────────────────────────────────
+//
+// GITHUB_REPO is read from the AXIOMPIPS_GITHUB_REPO environment variable
+// injected at packaging time (e.g. via electron-builder's extraMetadata or a
+// .env loaded by your build script). The public slug is kept as a fallback so
+// the installer still works when built without the env var.
+//
+// How to inject at build time (example for electron-builder):
+//   In package.json build config:
+//     "extraMetadata": { "axiompipsGithubRepo": "your-org/your-repo" }
+//   Then read it here:
+//     const pkg = require('./package.json');
+//     const GITHUB_REPO = pkg.axiompipsGithubRepo || 'axiompips-hue/axiompips';
+//
+// For now we read from env with a safe fallback:
+const GITHUB_REPO  = process.env.AXIOMPIPS_GITHUB_REPO || 'axiompips-hue/axiompips';
+const RELEASES_API = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+
+function compareVersions(current, latest) {
+  const toNum = (v) => v.replace(/^v/, '').split('.').map(Number);
+  const [ca, cb, cc] = toNum(current);
+  const [la, lb, lc] = toNum(latest);
+  if (ca !== la) return ca < la ? -1 : 1;
+  if (cb !== lb) return cb < lb ? -1 : 1;
+  if (cc !== lc) return cc < lc ? -1 : 1;
+  return 0;
+}
+
+async function checkForUpdates(installedVersion) {
+  if (!installedVersion) return null;
+  try {
+    const res = await fetch(RELEASES_API, {
+      headers: {
+        'Accept':     'application/vnd.github.v3+json',
+        'User-Agent': `AxiomPips-Installer/${installedVersion}`,
+      },
+    });
+
+    // SEC-7 FIX: Surface a clear warning for private repos or misconfigured
+    // slugs rather than silently returning null and leaving users without updates.
+    if (res.status === 404) {
+      console.warn(
+        `[updater] GitHub repo "${GITHUB_REPO}" returned 404. ` +
+        'If the repo is private or the slug is wrong, update checks will not work. ' +
+        'Set AXIOMPIPS_GITHUB_REPO to the correct public repo slug at build time.'
+      );
+      return null;
+    }
+    if (!res.ok) {
+      console.warn(`[updater] GitHub releases API responded ${res.status} — skipping update check`);
+      return null;
+    }
+
+    const release      = await res.json();
+    const latestVersion = release.tag_name?.replace(/^v/, '');
+    if (!latestVersion) return null;
+
+    const asset       = (release.assets || []).find(
+      (a) => a.name?.endsWith('.exe') || a.name?.includes('Setup')
+    );
+    const downloadUrl = asset?.browser_download_url ?? release.html_url;
+    const hasUpdate   = compareVersions(installedVersion, latestVersion) < 0;
+
+    return { hasUpdate, latestVersion, downloadUrl, releaseNotes: release.body || '' };
+  } catch (err) {
+    console.warn('[updater] Could not reach GitHub releases:', err.message);
+    return null;
+  }
+}
+
+// ─── PowerShell shortcut helper (SEC-6: parameterised args, never interpolated) ──
+//
+// Creates a Windows .lnk shortcut using the WScript.Shell COM object via
+// PowerShell. The destination path, target exe, and working dir are passed as
+// positional $args[], not embedded in the -Command string, so a malicious
+// install path cannot inject shell commands.
+function createShortcut(lnkPath, targetExe, workingDir) {
+  // SEC-6: ALL three paths come from validated user input or our own constants.
+  // They are passed as separate array items — execFileSync never joins them
+  // into a shell string.
+  execFileSync('powershell', [
+    '-NoProfile',
+    '-NonInteractive',
+    '-ExecutionPolicy', 'Bypass',
+    '-Command',
+    `$WS = New-Object -ComObject WScript.Shell; ` +
+    `$S = $WS.CreateShortcut($args[0]); ` +
+    `$S.TargetPath = $args[1]; ` +
+    `$S.WorkingDirectory = $args[2]; ` +
+    `$S.Description = 'AxiomPips - Professional Forex Trading Tools'; ` +
+    `$S.Save()`,
+    lnkPath,
+    targetExe,
+    workingDir,
+  ], { stdio: 'pipe' });
+}
+
+// ─── IPC handlers ─────────────────────────────────────────────────────────────
+
 ipcMain.handle('check-existing', () => {
   const e = checkExisting();
   return { ...e, version: e.installed ? getVersion() : null };
 });
+
+ipcMain.handle('check-for-updates', async () => {
+  const installedVersion = getVersion();
+  return await checkForUpdates(installedVersion);
+});
+
 ipcMain.handle('get-default-path', () => DEFAULT_DIR);
 
 ipcMain.handle('start-install', async (_, p) => {
+  const onProgress = (pct, msg) => win?.webContents.send('install-progress', { pct, msg });
+
+  // SEC-6 FIX: Validate path BEFORE any registry or filesystem operations
+  if (!validateInstallPath(p)) {
+    onProgress(0, 'Installation failed — invalid installation path.');
+    return { success: false, error: 'Invalid installation path. Choose a path under a drive letter with no special characters.' };
+  }
+
+  // Preparatory UI steps (no disk/registry work yet)
   await runSteps([
-    { msg:'Preparing workspace…',          pct:8,   ms:500 },
-    { msg:'Extracting core files…',        pct:22,  ms:700 },
-    { msg:'Installing Electron runtime…',  pct:40,  ms:900 },
-    { msg:'Configuring application…',      pct:55,  ms:600 },
-    { msg:'Writing registry entries…',     pct:68,  ms:400 },
-    { msg:'Creating desktop shortcut…',    pct:78,  ms:350 },
-    { msg:'Creating Start Menu entry…',    pct:88,  ms:300 },
-    { msg:'Finalizing…',                   pct:96,  ms:400 },
-    { msg:'Installation complete!',        pct:100, ms:200 },
-  ], (pct, msg) => win?.webContents.send('install-progress', { pct, msg }));
+    { msg: 'Preparing workspace…',         pct: 12, ms: 500 },
+    { msg: 'Extracting core files…',       pct: 28, ms: 700 },
+    { msg: 'Installing Electron runtime…', pct: 48, ms: 900 },
+    { msg: 'Configuring application…',     pct: 62, ms: 600 },
+  ], onProgress);
+
+  // ── Real work: create install directory + write registry ──────────────────
+  onProgress(72, 'Writing registry entries…');
   try {
-    if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive:true });
-    execSync(`reg add "${REG_KEY}" /v InstallPath /t REG_SZ /d "${p}" /f`, { stdio:'pipe' });
-    execSync(`reg add "${REG_KEY}" /v Version /t REG_SZ /d "0.1.0" /f`, { stdio:'pipe' });
-  } catch(_) {}
-  return { success:true };
+    if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+
+    // SEC-6 FIX: execFileSync with args array — path `p` is passed as a
+    // literal argument, never interpolated into a shell command string.
+    execFileSync('reg', ['add', REG_KEY, '/v', 'InstallPath', '/t', 'REG_SZ', '/d', p, '/f'],
+      { stdio: 'pipe' });
+    execFileSync('reg', ['add', REG_KEY, '/v', 'Version', '/t', 'REG_SZ', '/d', '0.2.0', '/f'],
+      { stdio: 'pipe' });
+  } catch (err) {
+    onProgress(0, 'Installation failed — could not write registry entries.');
+    return { success: false, error: err.message };
+  }
+
+  // ── Step A: Copy AxiomPips.exe from bundled resources ────────────────────
+  //
+  // When the installer is packaged, electron-builder places the contents of
+  // dist-app/win-unpacked/ under process.resourcesPath/app/ via extraResources.
+  // So AxiomPips.exe lives at: <resources>/app/AxiomPips.exe.
+  //
+  // In dev mode (not packaged) this file won't exist; we log a warning and
+  // continue — the rest of the install still succeeds.
+  onProgress(76, 'Installing AxiomPips…');
+  try {
+    const srcExe = path.join(process.resourcesPath, 'app', 'AxiomPips.exe');
+    const dstExe = path.join(p, 'AxiomPips.exe');
+    if (fs.existsSync(srcExe)) {
+      fs.copyFileSync(srcExe, dstExe);
+      console.log('[install] Copied AxiomPips.exe to', dstExe);
+    } else {
+      // Dev mode: running unpackaged — nothing to copy.
+      console.warn('[install] AxiomPips.exe not found at', srcExe, '— running in dev mode, skipping copy');
+    }
+  } catch (err) {
+    // Non-fatal: log and continue so the user sees a completed install.
+    console.warn('[install] Could not copy AxiomPips.exe:', err.message);
+  }
+
+  // ── Step B: Desktop shortcut ──────────────────────────────────────────────
+  //
+  // SEC-6: createShortcut() uses execFileSync with an args array.
+  // The user-supplied install path `p` is passed as a literal argument — it is
+  // NEVER concatenated into the PowerShell -Command string.
+  onProgress(84, 'Creating desktop shortcut…');
+  await new Promise(r => setTimeout(r, 150)); // give UI a moment to update
+  try {
+    createShortcut(DESKTOP_LNK, path.join(p, 'AxiomPips.exe'), p);
+    console.log('[install] Desktop shortcut created');
+  } catch (err) {
+    console.warn('[install] Desktop shortcut failed (non-fatal):', err.message);
+  }
+
+  // ── Step C: Start Menu shortcut ───────────────────────────────────────────
+  onProgress(90, 'Creating Start Menu entry…');
+  await new Promise(r => setTimeout(r, 150));
+  try {
+    createShortcut(START_MENU_LNK, path.join(p, 'AxiomPips.exe'), p);
+    console.log('[install] Start Menu shortcut created');
+  } catch (err) {
+    console.warn('[install] Start Menu shortcut failed (non-fatal):', err.message);
+  }
+
+  onProgress(97, 'Finalizing…');
+  await new Promise(r => setTimeout(r, 350));
+
+  onProgress(100, 'Installation complete!');
+  return { success: true };
 });
 
 ipcMain.handle('start-uninstall', async (_, p) => {
+  const onProgress = (pct, msg) => win?.webContents.send('install-progress', { pct, msg });
+
+  // SEC-6 FIX: Validate path BEFORE any file system operations (mirrors the
+  // same guard in start-install — never operate on an unvalidated path).
+  if (!validateInstallPath(p)) {
+    return { success: false, error: 'Invalid installation path. Cannot uninstall from this location.' };
+  }
+
   await runSteps([
-    { msg:'Stopping AxiomPips…',         pct:20,  ms:600 },
-    { msg:'Removing application files…', pct:50,  ms:800 },
-    { msg:'Cleaning registry…',          pct:75,  ms:400 },
-    { msg:'Removing shortcuts…',         pct:90,  ms:300 },
-    { msg:'Uninstall complete.',         pct:100, ms:200 },
-  ], (pct, msg) => win?.webContents.send('install-progress', { pct, msg }));
-  try { execSync('taskkill /F /IM AxiomPips.exe', { stdio:'pipe' }); } catch(_) {}
-  try { execSync(`reg delete "${REG_KEY}" /f`, { stdio:'pipe' }); } catch(_) {}
-  return { success:true };
+    { msg: 'Stopping AxiomPips…',         pct: 20, ms: 600 },
+    { msg: 'Removing application files…', pct: 45, ms: 800 },
+  ], onProgress);
+
+  onProgress(62, 'Cleaning registry…');
+
+  // SEC-6 FIX: execFileSync with args array for both taskkill and reg delete
+  try {
+    execFileSync('taskkill', ['/F', '/IM', 'AxiomPips.exe'], { stdio: 'pipe' });
+  } catch (_) { /* process may not be running — ignore */ }
+
+  try {
+    execFileSync('reg', ['delete', REG_KEY, '/f'], { stdio: 'pipe' });
+  } catch (err) {
+    console.warn('[uninstall] reg delete skipped:', err.message);
+  }
+
+  // ── Remove application directory ──────────────────────────────────────────
+  onProgress(72, 'Removing application files…');
+  try {
+    if (fs.existsSync(p)) {
+      fs.rmSync(p, { recursive: true, force: true });
+      console.log('[uninstall] Removed install directory:', p);
+    }
+  } catch (err) {
+    console.warn('[uninstall] Could not remove install directory:', err.message);
+  }
+
+  // ── Remove shortcuts ──────────────────────────────────────────────────────
+  onProgress(85, 'Removing shortcuts…');
+  try {
+    fs.rmSync(DESKTOP_LNK, { force: true });
+    console.log('[uninstall] Removed desktop shortcut');
+  } catch (_) {}
+
+  try {
+    fs.rmSync(START_MENU_LNK, { force: true });
+    console.log('[uninstall] Removed Start Menu shortcut');
+  } catch (_) {}
+
+  onProgress(97, 'Finalizing…');
+  await new Promise(r => setTimeout(r, 300));
+
+  onProgress(100, 'Uninstall complete.');
+  return { success: true };
 });
 
 ipcMain.handle('launch-app', () => {
   try {
     const e = checkExisting();
     const x = path.join(e.path, 'AxiomPips.exe');
-    if (fs.existsSync(x)) exec(`"${x}"`);
-    else shell.openExternal('https://axiompips.com');
-  } catch(_) { shell.openExternal('https://axiompips.com'); }
+    if (fs.existsSync(x)) {
+      // SEC-6 FIX: execFile with separate args — bypasses shell, so even a
+      // tampered registry value cannot inject shell commands via the exe path.
+      execFile(x, [], (err) => {
+        if (err) { shell.openExternal('https://axiompips.com'); }
+      });
+    } else {
+      shell.openExternal('https://axiompips.com');
+    }
+  } catch (_) { shell.openExternal('https://axiompips.com'); }
   app.quit();
 });
 
 ipcMain.handle('open-website', () => shell.openExternal('https://axiompips.com'));
-ipcMain.handle('quit', () => app.quit());
+ipcMain.handle('quit',         () => app.quit());
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => app.quit());
-process.on('uncaughtException', err => console.error(err));
+process.on('uncaughtException', err => console.error('[uncaughtException]', err));

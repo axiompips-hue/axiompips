@@ -1,37 +1,28 @@
-﻿appId: com.axiompips.desktop
+appId: com.axiompips.desktop
 productName: AxiomPips
 copyright: "Copyright © 2025 AxiomPips"
 
 directories:
   buildResources: electron/assets
-  output: dist-electron
+  output: dist-app
 
 files:
-  - electron/**
-  - "!electron/assets/README.md"
-  - "!electron/assets/generate-installer-images.py"
+  - "electron/**"
+  - "!electron/assets/ICON_INSTRUCTIONS.md"
 
 win:
   target:
-    - target: nsis
-  artifactName: "AxiomPips-Setup-${version}.${ext}"
+    # 'dir' builds to dist-app/win-unpacked/ (unpacked folder, not a standalone .exe).
+    # The custom installer (installer-builder.yml) then bundles this folder via
+    # extraResources and copies AxiomPips.exe to the user's chosen install directory.
+    - target: dir
+  # electron-builder auto-converts icon.png to .ico on Windows builds.
+  # Replace icon.png (and optionally icon.ico) with real artwork before release.
+  # See electron/assets/ICON_INSTRUCTIONS.md for instructions.
+  icon: electron/assets/icon.png
+  artifactName: "AxiomPips.exe"
   requestedExecutionLevel: asInvoker
   signingHashAlgorithms: null
   sign: null
-
-nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
-  allowElevation: true
-  perMachine: false
-  createDesktopShortcut: true
-  createStartMenuShortcut: true
-  shortcutName: AxiomPips
-  menuCategory: "AxiomPips"
-  include: electron/installer.nsh
-  uninstallDisplayName: "AxiomPips ${version}"
-  installerHeader: electron/assets/installerHeader.bmp
-  installerSidebar: electron/assets/installerSidebar.bmp
-  deleteAppDataOnUninstall: false
 
 publish: null

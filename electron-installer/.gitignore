@@ -1,0 +1,29 @@
+# electron-installer/.gitignore
+#
+# B5 FIX: Zero-byte artifact files
+# These empty files were accidentally included from a build step that
+# dereferenced symlinks (node binary stubs) as empty files during zipping.
+# They serve no purpose and should never be committed.
+#
+# To remove them from git history run (from repo root):
+#   git rm --cached "electron-installer/next" \
+#                   "electron-installer/npm" \
+#                   "electron-installer/axiompips@0.1.0"
+#   git commit -m "chore: remove zero-byte electron-installer artifacts"
+#
+axiompips@0.1.0
+next
+npm
+
+# Build output — never commit packaged binaries
+dist/
+release/
+out/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.snap
+
+# Electron dev logs
+*.log

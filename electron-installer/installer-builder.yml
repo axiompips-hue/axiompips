@@ -1,19 +1,31 @@
 appId: com.axiompips.installer
-productName: AxiomPips
+productName: AxiomPips Setup
 copyright: "Copyright © 2025 AxiomPips"
 
 directories:
   output: dist-installer
 
 files:
+  - "**/*"
+  - "!dist-app/**"
   - "!dist-installer/**"
   - "!node_modules/**"
-  - "**/*"
+  - "!electron/**"
+  - "!scripts/**"
+  - "!.github/**"
+
+# Bundle the unpacked app (built by builder.yml / npm run build:app) so that
+# the installer's start-install IPC handler can copy AxiomPips.exe from
+# process.resourcesPath/app/ into the user's chosen install directory.
+extraResources:
+  - from: "dist-app/win-unpacked/"
+    to: "app"
 
 win:
   target:
     - target: nsis
-  artifactName: "AxiomPips-Setup.exe"
+  icon: electron/assets/icon.png
+  artifactName: "AxiomPipsSetup.exe"
   requestedExecutionLevel: asInvoker
   signingHashAlgorithms: null
   sign: null
@@ -21,8 +33,11 @@ win:
 nsis:
   oneClick: true
   perMachine: false
-  createDesktopShortcut: true
-  createStartMenuShortcut: true
-  shortcutName: AxiomPips Installer
+  # Desktop and Start Menu shortcuts are created by the custom installer's
+  # start-install IPC handler (via PowerShell) — we do not want electron-builder's
+  # NSIS to create duplicate shortcuts.
+  createDesktopShortcut: false
+  createStartMenuShortcut: false
+  shortcutName: AxiomPips Setup
 
 publish: null
