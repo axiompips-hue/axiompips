@@ -20,24 +20,21 @@ files:
 extraResources:
   - from: "dist-app/win-unpacked/"
     to: "app"
+    filter:
+      - "**/*"
+      - "!locales/**"          # strip all locales first...
+      - "locales/en-US.pak"   # ...then add back English only (~15-20MB saving)
 
 win:
   target:
-    - target: nsis
+    # 'portable' creates a single .exe that runs directly — no NSIS wrapper.
+    # When the user double-clicks AxiomPipsSetup.exe, our custom installer.html
+    # UI opens immediately instead of the default NSIS installer screen.
+    - target: portable
   icon: electron/assets/icon.png
   artifactName: "AxiomPipsSetup.exe"
   requestedExecutionLevel: asInvoker
   signingHashAlgorithms: null
   sign: null
-
-nsis:
-  oneClick: true
-  perMachine: false
-  # Desktop and Start Menu shortcuts are created by the custom installer's
-  # start-install IPC handler (via PowerShell) — we do not want electron-builder's
-  # NSIS to create duplicate shortcuts.
-  createDesktopShortcut: false
-  createStartMenuShortcut: false
-  shortcutName: AxiomPips Setup
 
 publish: null
