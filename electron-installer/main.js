@@ -272,28 +272,29 @@ ipcMain.handle('start-install', async (_, p) => {
     return { success: false, error: err.message };
   }
 
-  // ── Step A: Copy AxiomPips.exe from bundled resources ────────────────────
+  // ── Step A: Copy entire app from bundled resources ───────────────────────
   //
-  // When the installer is packaged, electron-builder places the contents of
-  // dist-app/win-unpacked/ under process.resourcesPath/app/ via extraResources.
-  // So AxiomPips.exe lives at: <resources>/app/AxiomPips.exe.
+  // IMPORTANT: Electron cannot run from a single .exe — it needs its DLLs,
+  // resources/, and locales/ alongside it. Copying only AxiomPips.exe caused
+  // it to silently fail and fall back to opening the website in Chrome.
+  // Fix: copy the entire win-unpacked directory to the install location.
   //
-  // In dev mode (not packaged) this file won't exist; we log a warning and
-  // continue — the rest of the install still succeeds.
+  // electron-builder places dist-app/win-unpacked/ at process.resourcesPath/app/
+  // via extraResources. So the full app lives at: <resources>/app/
   onProgress(76, 'Installing AxiomPips…');
   try {
-    const srcExe = path.join(process.resourcesPath, 'app', 'AxiomPips.exe');
-    const dstExe = path.join(p, 'AxiomPips.exe');
-    if (fs.existsSync(srcExe)) {
-      fs.copyFileSync(srcExe, dstExe);
-      console.log('[install] Copied AxiomPips.exe to', dstExe);
+    const srcDir = path.join(process.resourcesPath, 'app');
+    if (fs.existsSync(srcDir)) {
+      // fs.cpSync copies recursively — available in Node 16.7+ (Electron 33 uses Node 20)
+      fs.cpSync(srcDir, p, { recursive: true, force: true });
+      console.log('[install] Copied full app directory to', p);
     } else {
       // Dev mode: running unpackaged — nothing to copy.
-      console.warn('[install] AxiomPips.exe not found at', srcExe, '— running in dev mode, skipping copy');
+      console.warn('[install] app directory not found at', srcDir, '— dev mode, skipping');
     }
   } catch (err) {
     // Non-fatal: log and continue so the user sees a completed install.
-    console.warn('[install] Could not copy AxiomPips.exe:', err.message);
+    console.warn('[install] Could not copy app:', err.message);
   }
 
   // ── Step B: Desktop shortcut ──────────────────────────────────────────────
