@@ -79,10 +79,10 @@ function createWindow() {
     resizable:       false,
     maximizable:     false,
     frame:           false,
-    transparent:     true,
+    transparent:     false,       // transparent:true causes corner artifacts on Windows
+    backgroundColor: '#09090b',  // matches --c-bg so border-radius looks clean
     center:          true,
     show:            false,
-    backgroundColor: '#00000000',
     webPreferences: {
       nodeIntegration:  false,
       contextIsolation: true,
@@ -390,15 +390,17 @@ ipcMain.handle('launch-app', () => {
     const e = checkExisting();
     const x = path.join(e.path, 'AxiomPips.exe');
     if (fs.existsSync(x)) {
-      // SEC-6 FIX: execFile with separate args — bypasses shell, so even a
-      // tampered registry value cannot inject shell commands via the exe path.
+      // Launch the installed app — fire and forget.
+      // execFile bypasses the shell (SEC-6) so the path is never interpreted.
       execFile(x, [], (err) => {
-        if (err) { shell.openExternal('https://axiompips.com'); }
+        if (err) console.warn('[launch-app] AxiomPips.exe failed to start:', err.message);
       });
     } else {
-      shell.openExternal('https://axiompips.com');
+      console.warn('[launch-app] AxiomPips.exe not found at', x, '— nothing to launch');
     }
-  } catch (_) { shell.openExternal('https://axiompips.com'); }
+  } catch (err) {
+    console.warn('[launch-app] Error:', err.message);
+  }
   app.quit();
 });
 
