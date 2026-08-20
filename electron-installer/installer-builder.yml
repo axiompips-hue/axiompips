@@ -20,10 +20,6 @@ files:
 extraResources:
   - from: "dist-app/win-unpacked/"
     to: "app"
-    filter:
-      - "**/*"
-      - "!locales/**"          # strip all locales first...
-      - "locales/en-US.pak"   # ...then add back English only (~15-20MB saving)
 
 win:
   target:

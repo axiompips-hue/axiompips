@@ -30,7 +30,7 @@ const os   = require('os');
 
 // SEC-6 FIX: Import execFileSync (array-args, no shell) and execFile (async).
 // execSync is intentionally removed — it should never be used with user input.
-const { execFileSync, execFile } = require('child_process');
+const { execFileSync, execFile, spawn } = require('child_process');
 
 const INSTALL_HTML = path.join(__dirname, 'installer.html');
 const PRELOAD_PATH = path.join(__dirname, 'installer-preload.js');
@@ -79,10 +79,10 @@ function createWindow() {
     resizable:       false,
     maximizable:     false,
     frame:           false,
-    transparent:     false,       // transparent:true causes corner artifacts on Windows
-    backgroundColor: '#09090b',  // matches --c-bg so border-radius looks clean
+    transparent:     true,           // transparent = clean CSS border-radius corners
+    backgroundColor: '#00000000',   // fully transparent — no corner bleed
     center:          true,
-    show:            false,
+    show:            true,           // show immediately — avoids silent startup failures
     webPreferences: {
       nodeIntegration:  false,
       contextIsolation: true,
@@ -91,7 +91,6 @@ function createWindow() {
   });
 
   win.loadFile(INSTALL_HTML);
-  win.once('ready-to-show', () => { win.show(); win.focus(); });
 }
 
 // ─── Registry helpers (SEC-6: all use execFileSync with args array) ───────────
@@ -389,19 +388,28 @@ ipcMain.handle('launch-app', () => {
   try {
     const e = checkExisting();
     const x = path.join(e.path, 'AxiomPips.exe');
+    console.log('[launch-app] Looking for exe at:', x);
+    console.log('[launch-app] Exists:', fs.existsSync(x));
+
     if (fs.existsSync(x)) {
-      // Launch the installed app — fire and forget.
-      // execFile bypasses the shell (SEC-6) so the path is never interpreted.
-      execFile(x, [], (err) => {
-        if (err) console.warn('[launch-app] AxiomPips.exe failed to start:', err.message);
+      // CRITICAL: detached:true + stdio:'ignore' + unref() = truly independent child.
+      // Without detached:true, when app.quit() closes the installer process group,
+      // Windows also kills AxiomPips.exe before it finishes starting.
+      const child = spawn(x, [], {
+        detached: true,
+        stdio:    'ignore',
+        cwd:      path.dirname(x),
       });
+      child.unref(); // parent (installer) can exit without waiting for child
+      setTimeout(() => app.quit(), 600); // brief delay so child has time to register
     } else {
-      console.warn('[launch-app] AxiomPips.exe not found at', x, '— nothing to launch');
+      console.warn('[launch-app] AxiomPips.exe not found at', x);
+      app.quit();
     }
   } catch (err) {
     console.warn('[launch-app] Error:', err.message);
+    app.quit();
   }
-  app.quit();
 });
 
 ipcMain.handle('open-website', () => shell.openExternal('https://axiompips.com'));
