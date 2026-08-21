@@ -12,4 +12,8 @@ contextBridge.exposeInMainWorld('installer', {
   openWebsite:     ()           => ipcRenderer.invoke('open-website'),
   quit:            ()           => ipcRenderer.invoke('quit'),
   onProgress:      (cb)         => ipcRenderer.on('install-progress', (_, data) => cb(data)),
+  // FIX: expose launch-state events so the renderer can show feedback on the
+  // Launch button instead of appearing to ignore the click.
+  onLaunching:     (cb)         => ipcRenderer.on('launching-app', () => cb()),
+  onLaunchFail:    (cb)         => ipcRenderer.on('launch-failed', () => cb()),
 });

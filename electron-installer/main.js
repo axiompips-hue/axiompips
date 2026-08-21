@@ -43,10 +43,32 @@ const REG_KEY = 'HKCU\\Software\\AxiomPips';
 
 // Convenience: resolve the APPDATA path used for Start Menu shortcut.
 // Falls back to a manually constructed path if APPDATA env var is missing.
-const APPDATA_DIR = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+const APPDATA_DIR    = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
 const START_MENU_DIR = path.join(APPDATA_DIR, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
-const DESKTOP_LNK    = path.join(os.homedir(), 'Desktop', 'AxiomPips.lnk');
 const START_MENU_LNK = path.join(START_MENU_DIR, 'AxiomPips.lnk');
+
+// FIX (No desktop shortcut): os.homedir() + '\Desktop' is wrong on Windows 11
+// when the user has OneDrive Desktop redirection enabled (the default). The
+// Desktop is then at 'OneDrive\Desktop', not directly under the home folder.
+// getDesktopPath() calls PowerShell's [Environment]::GetFolderPath('Desktop'),
+// which always returns the actual Desktop path regardless of OneDrive settings.
+// This is called at install/uninstall time, not at module load, so it runs
+// with the correct user context and never caches a stale path.
+function getDesktopPath() {
+  try {
+    const r = execFileSync('powershell', [
+      '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass',
+      '-Command', '[Environment]::GetFolderPath("Desktop")',
+    ], { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
+    const p = r.trim();
+    if (p && fs.existsSync(p)) return p;
+  } catch (_) {}
+  // Fallback 1: explicit OneDrive Desktop path
+  const oneDriveDesktop = path.join(os.homedir(), 'OneDrive', 'Desktop');
+  if (fs.existsSync(oneDriveDesktop)) return oneDriveDesktop;
+  // Fallback 2: classic Desktop path
+  return path.join(os.homedir(), 'Desktop');
+}
 
 let win = null;
 
@@ -79,10 +101,16 @@ function createWindow() {
     resizable:       false,
     maximizable:     false,
     frame:           false,
-    transparent:     true,           // transparent = clean CSS border-radius corners
-    backgroundColor: '#00000000',   // fully transparent — no corner bleed
+    // FIX (Slow startup): transparent:true forces Windows to use the software
+    // compositor (DWM layered-window path) instead of the normal GPU-accelerated
+    // path. On most hardware this adds 2–5 seconds to the time before the window
+    // appears. Removing it lets Electron use the fast hardware compositor.
+    // The installer UI is fully dark (#09090b), so setting backgroundColor to
+    // match gives the same visual result without the performance cost.
+    transparent:     false,
+    backgroundColor: '#09090b',   // matches --c-bg in installer.html; no white flash
     center:          true,
-    show:            true,           // show immediately — avoids silent startup failures
+    show:            true,        // show immediately — avoids silent startup failures
     webPreferences: {
       nodeIntegration:  false,
       contextIsolation: true,
@@ -180,7 +208,7 @@ async function checkForUpdates(installedVersion) {
       return null;
     }
 
-    const release      = await res.json();
+    const release       = await res.json();
     const latestVersion = release.tag_name?.replace(/^v/, '');
     if (!latestVersion) return null;
 
@@ -197,31 +225,34 @@ async function checkForUpdates(installedVersion) {
   }
 }
 
-// ─── PowerShell shortcut helper (SEC-6: parameterised args, never interpolated) ──
+// ─── PowerShell shortcut helper ───────────────────────────────────────────────
 //
 // Creates a Windows .lnk shortcut using the WScript.Shell COM object via
-// PowerShell. The destination path, target exe, and working dir are passed as
-// positional $args[], not embedded in the -Command string, so a malicious
-// install path cannot inject shell commands.
+// PowerShell. Paths are passed via environment variables (not positional $args)
+// because $args behaviour in PowerShell's -Command mode is inconsistent across
+// PS 5.x versions and can silently receive no arguments on some machines.
+// Environment variables are always forwarded correctly by execFileSync and are
+// accessed via $env:VAR_NAME in the script — no path can escape this channel.
+//
+// SEC-6: lnkPath, targetExe, and workingDir are user-controlled values.
+// They are placed in the 'env' option dict, never interpolated into the
+// -Command string, so a malicious path cannot inject PowerShell commands.
 function createShortcut(lnkPath, targetExe, workingDir) {
-  // SEC-6: ALL three paths come from validated user input or our own constants.
-  // They are passed as separate array items — execFileSync never joins them
-  // into a shell string.
   execFileSync('powershell', [
     '-NoProfile',
     '-NonInteractive',
     '-ExecutionPolicy', 'Bypass',
     '-Command',
-    `$WS = New-Object -ComObject WScript.Shell; ` +
-    `$S = $WS.CreateShortcut($args[0]); ` +
-    `$S.TargetPath = $args[1]; ` +
-    `$S.WorkingDirectory = $args[2]; ` +
-    `$S.Description = 'AxiomPips - Professional Forex Trading Tools'; ` +
-    `$S.Save()`,
-    lnkPath,
-    targetExe,
-    workingDir,
-  ], { stdio: 'pipe' });
+    '$WS = New-Object -ComObject WScript.Shell; ' +
+    '$S = $WS.CreateShortcut($env:LNK_PATH); ' +
+    '$S.TargetPath = $env:TARGET_EXE; ' +
+    '$S.WorkingDirectory = $env:WORKING_DIR; ' +
+    "$S.Description = 'AxiomPips - Professional Forex Trading Tools'; " +
+    '$S.Save()',
+  ], {
+    stdio: 'pipe',
+    env: { ...process.env, LNK_PATH: lnkPath, TARGET_EXE: targetExe, WORKING_DIR: workingDir },
+  });
 }
 
 // ─── IPC handlers ─────────────────────────────────────────────────────────────
@@ -298,13 +329,13 @@ ipcMain.handle('start-install', async (_, p) => {
 
   // ── Step B: Desktop shortcut ──────────────────────────────────────────────
   //
-  // SEC-6: createShortcut() uses execFileSync with an args array.
-  // The user-supplied install path `p` is passed as a literal argument — it is
-  // NEVER concatenated into the PowerShell -Command string.
+  // FIX: resolve the real Desktop path at install time via getDesktopPath()
+  // so OneDrive-redirected desktops (very common on Windows 11) are handled.
   onProgress(84, 'Creating desktop shortcut…');
   await new Promise(r => setTimeout(r, 150)); // give UI a moment to update
   try {
-    createShortcut(DESKTOP_LNK, path.join(p, 'AxiomPips.exe'), p);
+    const deskLnk = path.join(getDesktopPath(), 'AxiomPips.lnk');
+    createShortcut(deskLnk, path.join(p, 'AxiomPips.exe'), p);
     console.log('[install] Desktop shortcut created');
   } catch (err) {
     console.warn('[install] Desktop shortcut failed (non-fatal):', err.message);
@@ -366,9 +397,12 @@ ipcMain.handle('start-uninstall', async (_, p) => {
   }
 
   // ── Remove shortcuts ──────────────────────────────────────────────────────
+  //
+  // FIX: resolve the real Desktop path at uninstall time so the shortcut
+  // is found even if the user has OneDrive Desktop redirection enabled.
   onProgress(85, 'Removing shortcuts…');
   try {
-    fs.rmSync(DESKTOP_LNK, { force: true });
+    fs.rmSync(path.join(getDesktopPath(), 'AxiomPips.lnk'), { force: true });
     console.log('[uninstall] Removed desktop shortcut');
   } catch (_) {}
 
@@ -392,6 +426,14 @@ ipcMain.handle('launch-app', () => {
     console.log('[launch-app] Exists:', fs.existsSync(x));
 
     if (fs.existsSync(x)) {
+      // FIX (Launch button appears to do nothing):
+      // Tell the renderer immediately so the button switches to "Launching…"
+      // state before the installer window closes. Without this the user sees
+      // a click with no reaction, then the installer disappears ~600ms later,
+      // then silence for another second while AxiomPips starts its own splash.
+      // That sequence looks exactly like "button was ignored".
+      win?.webContents.send('launching-app');
+
       // CRITICAL: detached:true + stdio:'ignore' + unref() = truly independent child.
       // Without detached:true, when app.quit() closes the installer process group,
       // Windows also kills AxiomPips.exe before it finishes starting.
@@ -401,14 +443,24 @@ ipcMain.handle('launch-app', () => {
         cwd:      path.dirname(x),
       });
       child.unref(); // parent (installer) can exit without waiting for child
-      setTimeout(() => app.quit(), 600); // brief delay so child has time to register
+
+      // FIX: increased from 600ms to 2500ms.
+      // AxiomPips shows a splash screen for ~300ms then loads the Electron
+      // main window. Quitting the installer after only 600ms means AxiomPips
+      // hasn't appeared yet, leaving an apparent gap where nothing is visible.
+      // 2500ms gives AxiomPips enough time to become visible before the
+      // installer window disappears.
+      setTimeout(() => app.quit(), 2500);
     } else {
+      // FIX: was silently calling app.quit() — user saw installer close with
+      // no explanation and no app launching. Now we tell the renderer so it
+      // can show an error message instead of leaving the user confused.
       console.warn('[launch-app] AxiomPips.exe not found at', x);
-      app.quit();
+      win?.webContents.send('launch-failed');
     }
   } catch (err) {
     console.warn('[launch-app] Error:', err.message);
-    app.quit();
+    win?.webContents.send('launch-failed');
   }
 });
 

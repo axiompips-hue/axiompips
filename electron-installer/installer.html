@@ -294,6 +294,7 @@ html, body {
 .dcheck svg{width:26px;height:26px;fill:none;stroke-width:2;stroke-linecap:round;}
 .dcheck.ok svg{stroke:#22c55e;} .dcheck.rm svg{stroke:#f87171;}
 @keyframes pop{from{scale:0;opacity:0;rotate:-12deg}to{scale:1;opacity:1;rotate:0deg}}
+@keyframes spin{to{rotate:360deg}}
 
 /* ── Buttons ───────────────────────────────────────────────────────────── */
 .brow{display:flex;gap:7px;justify-content:flex-end;margin-top:auto;padding-top:8px;}
@@ -467,7 +468,7 @@ html, body {
             Installed successfully. Launch from your desktop shortcut anytime.
           </div>
           <div class="bcol" style="max-width:220px">
-            <button class="btn bp" style="width:100%;justify-content:center" onclick="window.installer?.launchApp()">
+            <button class="btn bp" id="launch-btn" style="width:100%;justify-content:center" onclick="doLaunchApp()">
               <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Launch AxiomPips
             </button>
@@ -595,6 +596,40 @@ window.installer?.onProgress(({ pct, msg }) => {
 async function doInstall()   { isUn=false; document.getElementById('ptitle').textContent='Installing AxiomPips…';   show('sp',1); await window.installer?.startInstall(ipath); }
 async function doUpdate()    { isUn=false; document.getElementById('ptitle').textContent='Reinstalling AxiomPips…'; show('sp',1); await window.installer?.startInstall(edata?.path||ipath); }
 async function doUninstall() { isUn=true;  document.getElementById('ptitle').textContent='Uninstalling AxiomPips…'; show('sp',1); await window.installer?.startUninstall(edata?.path||ipath); }
+
+// ── Launch button ─────────────────────────────────────────────────────────────
+// FIX: clicking the button now immediately disables it and shows a spinner so
+// the user knows the click registered. The installer stays open for ~2.5s
+// (see main.js) so the feedback is visible before the window closes.
+function doLaunchApp() {
+  const btn = document.getElementById('launch-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24" style="animation:spin .7s linear infinite">' +
+        '<path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83' +
+               'M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"' +
+             ' fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' +
+      '</svg>Launching…';
+  }
+  window.installer?.launchApp();
+}
+
+// FIX: if the exe was not found (silent failure before), show a clear error
+// so the user knows to reinstall rather than wondering if the button worked.
+window.installer?.onLaunchFail(() => {
+  const btn = document.getElementById('launch-btn');
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML =
+      '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>' +
+      'Launch AxiomPips';
+  }
+  const sub = document.querySelector('#sd .ssub');
+  if (sub) sub.innerHTML =
+    'Could not find <code>AxiomPips.exe</code> — the installation may be incomplete.' +
+    '<br/>Try reinstalling.';
+});
 </script>
 </body>
 </html>
