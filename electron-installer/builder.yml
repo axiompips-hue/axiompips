@@ -2,16 +2,14 @@ appId: com.axiompips.desktop
 productName: AxiomPips
 copyright: "Copyright © 2025 AxiomPips"
 
-# Override the main entry point for this specific build.
-# package.json "main" points to main.js (the installer entry), but the
-# desktop wrapper entry point is electron/main.js. extraMetadata patches
-# package.json inside the asar at build time without changing the file on disk.
+# Override the package.json main field for this build.
+# package.json points to main.js (old installer entry) — the actual app is electron/main.js.
 extraMetadata:
   main: electron/main.js
 
 directories:
   buildResources: electron/assets
-  output: dist-app
+  output: dist-installer
 
 files:
   - "electron/**"
@@ -19,17 +17,19 @@ files:
 
 win:
   target:
-    # 'dir' builds to dist-app/win-unpacked/ (unpacked folder, not a standalone .exe).
-    # The custom installer (installer-builder.yml) then bundles this folder via
-    # extraResources and copies AxiomPips.exe to the user's chosen install directory.
-    - target: dir
-  # electron-builder auto-converts icon.png to .ico on Windows builds.
-  # Replace icon.png (and optionally icon.ico) with real artwork before release.
-  # See electron/assets/ICON_INSTRUCTIONS.md for instructions.
+    - target: nsis
   icon: electron/assets/icon.png
-  artifactName: "AxiomPips.exe"
   requestedExecutionLevel: asInvoker
   signingHashAlgorithms: null
   sign: null
+
+nsis:
+  oneClick: false                           # shows install wizard, not a silent install
+  perMachine: false                         # installs per-user — no admin rights needed
+  allowToChangeInstallationDirectory: true  # user can pick install folder
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AxiomPips
+  deleteAppDataOnUninstall: true            # clean uninstall via Windows Settings
 
 publish: null

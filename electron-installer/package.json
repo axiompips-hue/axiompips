@@ -1,16 +1,13 @@
 {
-  "name": "axiompips-installer",
-  "version": "0.2.0",
+  "name": "axiompips-desktop",
+  "version": "0.1.0",
   "description": "AxiomPips Desktop Application",
   "main": "main.js",
   "private": true,
   "scripts": {
-    "start:installer": "electron .",
-    "start:app":       "electron electron/main.js",
-    "build:app":       "electron-builder --config builder.yml --win",
-    "build:installer": "electron-builder --config installer-builder.yml --win",
-    "build":           "npm run build:app && npm run build:installer",
-    "generate-icons":  "node scripts/generate-placeholder-icon.js"
+    "start:app":      "electron electron/main.js",
+    "build":          "electron-builder --config builder.yml --win",
+    "generate-icons": "node scripts/generate-placeholder-icon.js"
   },
   "devDependencies": {
     "electron":         "^33.4.0",
